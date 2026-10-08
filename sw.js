@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galaxy-green-battery-v4';
+const CACHE_NAME = 'galaxy-green-battery-v10';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,14 +14,13 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => caches.delete(key))
       );
     })
   );
   self.clients.claim();
 });
 
-// 네트워크 우선(Network First) 처리: 수정 시 설치된 앱도 즉시 갱신
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
