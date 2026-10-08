@@ -134,7 +134,7 @@
       line-height: 1.4;
     }
 
-    /* 하단 One UI 플로팅 메뉴 */
+    /* 하단 One UI 플로팅 액션 바 */
     .floating-bar-container {
       position: fixed;
       bottom: 24px;
@@ -187,12 +187,12 @@
       transform: scale(0.95);
     }
 
-    /* 가이드 바텀 시트 모달 */
+    /* 모달 및 바텀 시트 */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(5px);
       display: none;
       align-items: flex-end;
       z-index: 200;
@@ -269,15 +269,24 @@
       border: 1px solid rgba(0, 0, 0, 0.08);
       cursor: pointer;
     }
-    .route-box {
-      margin-top: 6px;
-      padding: 8px 12px;
+    .pill-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* 설정 안내 팝업 전용 스타일 */
+    .popup-box {
       background: var(--oneui-bg);
-      border-radius: 12px;
-      font-size: 0.82rem;
-      color: var(--oneui-text-sub);
-      display: inline-block;
-      line-height: 1.4;
+      border-radius: 18px;
+      padding: 16px;
+      margin-top: 12px;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .popup-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -311,7 +320,7 @@
 
     <div class="oneui-card" style="padding: 16px 20px;">
       <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        🔒 <b>완전한 오프라인 분석</b>: 파일은 서버로 업로드되지 않으며 스마트폰 브라우저 내부 메모리에서만 파싱되므로 개인정보가 유출되지 않습니다.
+        🔒 <b>완전한 오프라인 분석</b>: 파일은 외부 서버로 전송되지 않으며 스마트폰 브라우저 내부 메모리에서만 파싱되므로 안전합니다.
       </div>
     </div>
   </div>
@@ -345,16 +354,12 @@
         <div class="step-item">
           <div class="step-num">1</div>
           <div class="step-content">
-            <b>보안 위험 자동 차단 해제 (필수)</b><br>
+            <b>보안 위험 자동 차단 해제</b><br>
             One UI 6.1.1 이상은 켜져 있을 시 <code>*#9900#</code> 코드 진입이 차단됩니다.
             <div class="action-btn-row">
-              <a href="intent:#Intent;action=android.settings.SECURITY_SETTINGS;end" class="pill-btn" id="btnOpenSecurity">
-                ⚙️ 보안 설정 바로가기
-              </a>
-            </div>
-            <div class="route-box">
-              👉 진입 후 <b>[보안 위험 자동 차단]</b>을 눌러 <b>[사용 안 함]</b>으로 꺼주세요.<br>
-              <small>(링크가 열리지 않는 경우: 스마트폰 <b>설정 ➔ 보안 및 개인정보 보호 ➔ 보안 위험 자동 차단</b>)</small>
+              <button class="pill-btn" id="btnShowSecurityTips">
+                ⚙️ 1초 해제 가이드 열기
+              </button>
             </div>
           </div>
         </div>
@@ -364,7 +369,7 @@
           <div class="step-num">2</div>
           <div class="step-content">
             <b>SysDump 코드 실행</b><br>
-            기본 전화 다이얼 패드에서 <code>*#9900#</code>을 입력합니다.
+            전화 다이얼 패드에서 <code>*#9900#</code>을 입력합니다.
             <div class="action-btn-row">
               <a href="tel:*%239900%23" class="pill-btn">📞 전화 다이얼 열기</a>
               <button class="pill-btn" id="btnCopyCode">📋 코드 복사</button>
@@ -406,6 +411,42 @@
     </div>
   </div>
 
+  <!-- 보안 위험 자동 차단 안내 전용 모달 -->
+  <div class="modal-overlay" id="securityModal" style="z-index: 250;">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="margin: 0 0 6px 0; font-size: 1.25rem;">보안 위험 자동 차단 해제</h3>
+      <p style="margin: 0 0 12px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">
+        안드로이드 보안 정책상 웹앱에서 시스템 설정 앱을 직접 띄우지 못하게 차단되어 있으므로 아래 2가지 중 편한 방법으로 이동해 주세요.
+      </p>
+
+      <div class="popup-box">
+        <b style="color: var(--oneui-green);">⚡ 가장 빠른 방법 (3초 컷)</b>
+        <div style="margin-top: 8px; font-size: 0.88rem; line-height: 1.5;">
+          1. 갤럭시 <b>설정</b> 앱을 엽니다.<br>
+          2. 우측 상단 <b>돋보기(🔍)</b>를 누릅니다.<br>
+          3. 아래 버튼으로 단어를 복사한 뒤 검색창에 붙여넣으세요!
+        </div>
+        <div style="margin-top: 10px;">
+          <button class="pill-btn" id="btnCopyKeyword" style="background: var(--oneui-card);">
+            📋 '보안 위험 자동 차단' 복사
+          </button>
+        </div>
+      </div>
+
+      <div class="popup-box" style="margin-top: 10px;">
+        <b>📂 기본 메뉴 경로</b>
+        <div style="margin-top: 6px; font-size: 0.86rem; color: var(--oneui-text-sub); line-height: 1.45;">
+          <b>설정</b> ➔ <b>보안 및 개인정보 보호</b> ➔ <b>보안 위험 자동 차단</b> ➔ <b>[사용 안 함]</b>으로 변경
+        </div>
+      </div>
+
+      <button class="float-btn primary" id="btnCloseSecurityModal" style="width: 100%; justify-content: center; margin-top: 20px;">
+        설정 완료했습니다
+      </button>
+    </div>
+  </div>
+
   <script>
     // 서비스 워커 등록
     if ('serviceWorker' in navigator) {
@@ -414,7 +455,7 @@
       });
     }
 
-    // PWA 앱 설치 이벤트 처리
+    // PWA 앱 설치 이벤트
     let deferredPrompt = null;
     const btnInstall = document.getElementById('btnInstall');
 
@@ -445,6 +486,11 @@
     const guideModal = document.getElementById('guideModal');
     const btnCopyCode = document.getElementById('btnCopyCode');
 
+    const btnShowSecurityTips = document.getElementById('btnShowSecurityTips');
+    const securityModal = document.getElementById('securityModal');
+    const btnCloseSecurityModal = document.getElementById('btnCloseSecurityModal');
+    const btnCopyKeyword = document.getElementById('btnCopyKeyword');
+
     const healthVal = document.getElementById('healthVal');
     const cycleVal = document.getElementById('cycleVal');
     const summaryText = document.getElementById('summaryText');
@@ -457,7 +503,28 @@
       if (e.target === guideModal) guideModal.style.display = 'none';
     });
 
-    // 코드 복사
+    // 보안 위험 자동 차단 안내 모달
+    btnShowSecurityTips.addEventListener('click', () => {
+      securityModal.style.display = 'flex';
+    });
+    btnCloseSecurityModal.addEventListener('click', () => {
+      securityModal.style.display = 'none';
+    });
+    securityModal.addEventListener('click', (e) => {
+      if (e.target === securityModal) securityModal.style.display = 'none';
+    });
+
+    // 검색어 복사
+    btnCopyKeyword.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText('보안 위험 자동 차단');
+        alert("‘보안 위험 자동 차단’ 단어가 복사되었습니다.\n설정 앱 상단 돋보기(🔍)에 붙여넣으세요!");
+      } catch (err) {
+        alert("설정 앱 돋보기에서 '보안 위험 자동 차단'을 검색하세요.");
+      }
+    });
+
+    // SysDump 다이얼 코드 복사
     btnCopyCode.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText('*#9900#');
@@ -467,7 +534,7 @@
       }
     });
 
-    // 대용량 파일 스트리밍 파서 (메모리 절약)
+    // 파일 스트리밍 파서 (대용량 메모리 절약)
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
