@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galaxy-green-battery-v20';
+const CACHE_NAME = 'galaxy-green-battery-v25';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -34,3 +34,4 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+
