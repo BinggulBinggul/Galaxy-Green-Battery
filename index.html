@@ -134,7 +134,7 @@
       line-height: 1.4;
     }
 
-    /* One UI 플로팅 액션 바 */
+    /* 플로팅 액션 바 */
     .floating-bar-container {
       position: fixed;
       bottom: 24px;
@@ -187,7 +187,7 @@
       transform: scale(0.95);
     }
 
-    /* 바텀 시트 모달 */
+    /* 바텀 시트 모달 공통 */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -219,6 +219,75 @@
       border-radius: 999px;
       margin: 0 auto 18px auto;
     }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      background: var(--oneui-bg);
+      color: var(--oneui-text-main);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .pill-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+    .pill-btn.primary-pill {
+      background: var(--oneui-green-light);
+      color: var(--oneui-green-dark);
+      border-color: var(--oneui-green);
+    }
+    .pill-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      background: var(--oneui-bg);
+      color: var(--oneui-text-sub);
+      border-color: transparent;
+    }
+
+    /* 추가 정보 리포트 카드 디자인 */
+    .report-section {
+      background: var(--oneui-bg);
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 14px;
+    }
+    .report-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      color: var(--oneui-text-main);
+    }
+    .report-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 0.88rem;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+    }
+    .report-row:last-child {
+      border-bottom: none;
+    }
+    .report-label {
+      color: var(--oneui-text-sub);
+    }
+    .report-val {
+      font-weight: 700;
+      color: var(--oneui-text-main);
+      text-align: right;
+    }
+
+    /* 가이드 리스트 */
     .step-list {
       display: flex;
       flex-direction: column;
@@ -255,30 +324,6 @@
       gap: 8px;
       margin-top: 8px;
     }
-    .pill-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      text-decoration: none;
-      padding: 9px 14px;
-      border-radius: 12px;
-      font-size: 0.86rem;
-      font-weight: 600;
-      background: var(--oneui-bg);
-      color: var(--oneui-text-main);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      cursor: pointer;
-    }
-    .pill-btn:active {
-      transform: scale(0.97);
-    }
-    .pill-btn.primary-pill {
-      background: var(--oneui-green-light);
-      color: var(--oneui-green-dark);
-      border-color: var(--oneui-green);
-    }
-
-    /* 1초 가이드 박스 */
     .guide-tip-box {
       margin-top: 8px;
       background: var(--oneui-bg);
@@ -286,10 +331,9 @@
       padding: 12px 14px;
       font-size: 0.85rem;
       line-height: 1.5;
-      border: 1px solid rgba(0,0,0,0.04);
     }
 
-    /* 토스트 알림 (One UI 스타일) */
+    /* One UI 토스트 */
     .toast {
       position: fixed;
       top: 24px;
@@ -340,6 +384,11 @@
         </div>
       </div>
       <div id="statusDetail" class="status-msg">하단 플로팅 메뉴에서 [파일 선택]을 누르세요.</div>
+
+      <!-- 🌟 추가정보 확인하기 버튼 (배터리 카드 내부 아래칸) -->
+      <button class="pill-btn primary-pill" id="btnOpenExtraInfo" style="width: 100%; justify-content: center; margin-top: 18px; padding: 13px; font-size: 0.94rem;" disabled>
+        🔍 추가정보 확인하기 (기기·저장소·배터리 상세)
+      </button>
     </div>
 
     <div class="oneui-card" style="padding: 16px 20px;">
@@ -349,7 +398,7 @@
     </div>
   </div>
 
-  <!-- 하단 플로팅 액션 바 -->
+  <!-- 하단 One UI 플로팅 액션 바 -->
   <div class="floating-bar-container">
     <div class="floating-bar">
       <button class="float-btn secondary" id="btnInstall" style="display: none;">
@@ -365,6 +414,87 @@
   </div>
 
   <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
+
+  <!-- 🌟 추가정보 상세 리포트 바텀시트 모달 -->
+  <div class="modal-overlay" id="extraInfoModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">기기 종합 진단 리포트</h3>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 추출한 하드웨어 상세 정보입니다.</p>
+
+      <!-- 1. 배터리 심층 진단 -->
+      <div class="report-section">
+        <div class="report-title">🔋 배터리 상세 지표</div>
+        <div class="report-row">
+          <span class="report-label">실제 잔여 설계 용량</span>
+          <span class="report-val" id="repBatCap">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">배터리 제조일자</span>
+          <span class="report-val" id="repBatMfg">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">역대 최고 기록 온도</span>
+          <span class="report-val" id="repBatTemp">--</span>
+        </div>
+      </div>
+
+      <!-- 2. UFS 저장소 수명 -->
+      <div class="report-section">
+        <div class="report-title">💾 UFS 저장장치 플래시 수명</div>
+        <div class="report-row">
+          <span class="report-label">UFS Type A 블록 소모율</span>
+          <span class="report-val" id="repUfsA" style="color: var(--oneui-green-dark);">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">UFS Type B 블록 소모율</span>
+          <span class="report-val" id="repUfsB" style="color: var(--oneui-green-dark);">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">내장 메모리 수명 상태</span>
+          <span class="report-val" id="repPreEol">--</span>
+        </div>
+      </div>
+
+      <!-- 3. 기기 및 펌웨어 사양 -->
+      <div class="report-section">
+        <div class="report-title">📱 기기 및 소프트웨어 사양</div>
+        <div class="report-row">
+          <span class="report-label">기기 모델명</span>
+          <span class="report-val" id="repModel">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">프로세서 (AP/Chip)</span>
+          <span class="report-val" id="repSoc">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">소프트웨어 버전</span>
+          <span class="report-val" id="repOsVer">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">펌웨어 빌드 일자</span>
+          <span class="report-val" id="repBuildDate">--</span>
+        </div>
+      </div>
+
+      <!-- 4. 시스템 안정성 -->
+      <div class="report-section">
+        <div class="report-title">⏱️ 시스템 안정성 및 부팅 이력</div>
+        <div class="report-row">
+          <span class="report-label">마지막 재부팅 사유</span>
+          <span class="report-val" id="repBootReason">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">시스템 가동 시간 (Uptime)</span>
+          <span class="report-val" id="repUptime">--</span>
+        </div>
+      </div>
+
+      <button class="float-btn primary" id="btnCloseExtraInfo" style="width: 100%; justify-content: center; margin-top: 24px;">
+        닫기
+      </button>
+    </div>
+  </div>
 
   <!-- 가이드 바텀 시트 모달 -->
   <div class="modal-overlay" id="guideModal">
@@ -439,11 +569,10 @@
     </div>
   </div>
 
-  <!-- One UI 토스트 메시지 -->
+  <!-- 토스트 메시지 -->
   <div id="toast" class="toast"></div>
 
   <script>
-    // 토스트 팝업 함수
     function showToast(msg) {
       const toast = document.getElementById('toast');
       toast.textContent = msg;
@@ -454,7 +583,7 @@
       }, 2500);
     }
 
-    // 서비스 워커 등록 및 이전 캐시 즉시 갱신
+    // 서비스 워커 등록
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -484,12 +613,16 @@
       }
     });
 
-    // UI 요소 제어
+    // UI 컨트롤러
     const fileInput = document.getElementById('fileInput');
     const btnUploadTrigger = document.getElementById('btnUploadTrigger');
     const btnOpenGuide = document.getElementById('btnOpenGuide');
     const btnCloseGuide = document.getElementById('btnCloseGuide');
     const guideModal = document.getElementById('guideModal');
+
+    const btnOpenExtraInfo = document.getElementById('btnOpenExtraInfo');
+    const extraInfoModal = document.getElementById('extraInfoModal');
+    const btnCloseExtraInfo = document.getElementById('btnCloseExtraInfo');
 
     const btnCopyKeyword = document.getElementById('btnCopyKeyword');
     const btnCopyCode = document.getElementById('btnCopyCode');
@@ -499,6 +632,20 @@
     const summaryText = document.getElementById('summaryText');
     const statusDetail = document.getElementById('statusDetail');
 
+    // 리포트 상세 엘리먼트
+    const repBatCap = document.getElementById('repBatCap');
+    const repBatMfg = document.getElementById('repBatMfg');
+    const repBatTemp = document.getElementById('repBatTemp');
+    const repUfsA = document.getElementById('repUfsA');
+    const repUfsB = document.getElementById('repUfsB');
+    const repPreEol = document.getElementById('repPreEol');
+    const repModel = document.getElementById('repModel');
+    const repSoc = document.getElementById('repSoc');
+    const repOsVer = document.getElementById('repOsVer');
+    const repBuildDate = document.getElementById('repBuildDate');
+    const repBootReason = document.getElementById('repBootReason');
+    const repUptime = document.getElementById('repUptime');
+
     btnUploadTrigger.addEventListener('click', () => fileInput.click());
     btnOpenGuide.addEventListener('click', () => guideModal.style.display = 'flex');
     btnCloseGuide.addEventListener('click', () => guideModal.style.display = 'none');
@@ -506,7 +653,13 @@
       if (e.target === guideModal) guideModal.style.display = 'none';
     });
 
-    // 단어 복사 이벤트
+    // 추가정보 모달 오픈/클로즈
+    btnOpenExtraInfo.addEventListener('click', () => extraInfoModal.style.display = 'flex');
+    btnCloseExtraInfo.addEventListener('click', () => extraInfoModal.style.display = 'none');
+    extraInfoModal.addEventListener('click', (e) => {
+      if (e.target === extraInfoModal) extraInfoModal.style.display = 'none';
+    });
+
     btnCopyKeyword.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText('보안 위험 자동 차단');
@@ -516,7 +669,6 @@
       }
     });
 
-    // 전화 코드 복사 이벤트
     btnCopyCode.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText('*#9900#');
@@ -526,28 +678,81 @@
       }
     });
 
-    // 대용량 파일 스트리밍 파서 (메모리 절약)
+    // UFS 수명 텍스트 해석 함수
+    function parseUfsLife(val) {
+      if (!val) return '미기록';
+      const num = parseInt(val, 16);
+      if (num === 1) return '0%~10% 소모 (신품급/매우 양호)';
+      if (num === 2) return '10%~20% 소모 (매우 양호)';
+      if (num === 3) return '20%~30% 소모 (양호)';
+      if (num >= 4 && num <= 7) return `${(num-1)*10}%~${num*10}% 소모 (정상 작동 범위)`;
+      if (num >= 8 && num <= 10) return `${(num-1)*10}%~${num*10}% 소모 (주의 단계)`;
+      if (num >= 11) return '수명 만료 임박 (교체 권장)';
+      return `코드 0x${val}`;
+    }
+
+    // One UI 버전 포맷팅 함수
+    function formatOneUi(oneui, android) {
+      let result = '';
+      if (oneui) {
+        if (/^\d{5,6}$/.test(oneui)) {
+          const n = parseInt(oneui, 10);
+          const major = n >= 100000 ? Math.floor(n / 10000) - 9 : Math.floor(n / 10000);
+          const minor = Math.floor((n % 10000) / 100);
+          result = `One UI ${major}.${minor}`;
+        } else {
+          result = `One UI ${oneui}`;
+        }
+      }
+      if (android) {
+        result += result ? ` (Android ${android})` : `Android ${android}`;
+      }
+      return result || '정보 없음';
+    }
+
+    // 대용량 로그 스트리밍 파서
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      summaryText.textContent = `${file.name} 분석 중...`;
-      statusDetail.textContent = '로그 파일에서 BMS 배터리 지표를 추출하고 있습니다...';
+      summaryText.textContent = `${file.name} 종합 분석 중...`;
+      statusDetail.textContent = '로그에서 배터리, UFS 수명, 기기 스펙을 추출하고 있습니다...';
       healthVal.textContent = '...';
       cycleVal.textContent = '...';
+      btnOpenExtraInfo.disabled = true;
 
       try {
         const reader = file.stream().getReader();
         const decoder = new TextDecoder('utf-8');
         let remainder = '';
 
-        let asoc = null;
-        let bsoh = null;
-        let cycle = null;
+        // 지표 변수들
+        let asoc = null, bsoh = null, cycle = null;
+        let batCap = null, batMfg = null, batTemp = null;
+        let ufsA = null, ufsB = null, preEol = null;
+        let model = null, soc = null, androidVer = null, oneuiVer = null, buildDate = null;
+        let bootReason = null, uptime = null;
 
+        // 정규표현식
         const regexAsoc = /(?:mSavedBatteryAsoc|ASOC)\s*[:=]\s*(\d+)/i;
         const regexBsoh = /(?:mSavedBatteryBsoh|BSOH)\s*[:=]\s*(\d+)/i;
-        const regexUsage = /mSavedBatteryUsage\s*[:=]\s*(\d+)/i;
+        const regexUsage = /(?:mSavedBatteryUsage)\s*[:=]\s*(\d+)/i;
+
+        const regexCap = /(?:mSavedBatteryMaxCapacity|fg_fullcapnom|batt_capacity_max)\s*[:=]\s*(\d+)/i;
+        const regexMfg = /(?:mSavedBatteryMfgDate|batt_mfg_date)\s*[:=]\s*(\d+)/i;
+        const regexTemp = /(?:mSavedBatteryMaxTemp)\s*[:=]\s*(\d+)/i;
+
+        const regexUfsA = /(?:Device life time estimation type A|life_time_a)\s*[:=]\s*(?:0x)?([0-9a-fA-F]+)/i;
+        const regexUfsB = /(?:Device life time estimation type B|life_time_b)\s*[:=]\s*(?:0x)?([0-9a-fA-F]+)/i;
+        const regexPreEol = /Pre-EOL info\s*[:=]\s*(?:0x)?([0-9a-fA-F]+)/i;
+
+        const regexModel = /\[ro\.product\.model\]:\s*\[(.*?)\]/i;
+        const regexSoc = /\[(?:ro\.soc\.model\vert{}ro\.chipname\vert{}ro\.board\.platform)\]:\s*\[(.*?)\]/i;
+        const regexAndroid = /\[ro\.build\.version\.release\]:\s*\[(.*?)\]/i;
+        const regexOneui = /\[(?:ro\.build\.version\.oneui\vert{}ro\.build\.version\.sep)\]:\s*\[(.*?)\]/i;
+        const regexBuildDate = /\[ro\.build\.date\]:\s*\[(.*?)\]/i;
+        const regexBoot = /(?:\[sys\.boot\.reason\]:\s*\[(.*?)\]|Last reset reason\s*[:=]\s*(.*)|Reset Reason\s*[:=]\s*(.*))/i;
+        const regexUp = /uptime:\s*(.*)/i;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -558,29 +763,38 @@
           remainder = lines.pop();
 
           for (const line of lines) {
-            if (!asoc && regexAsoc.test(line)) {
-              asoc = line.match(regexAsoc)[1];
-            }
-            if (!bsoh && regexBsoh.test(line)) {
-              bsoh = line.match(regexBsoh)[1];
-            }
+            if (!asoc && regexAsoc.test(line)) asoc = line.match(regexAsoc)[1];
+            if (!bsoh && regexBsoh.test(line)) bsoh = line.match(regexBsoh)[1];
             if (!cycle && regexUsage.test(line)) {
               const raw = parseInt(line.match(regexUsage)[1], 10);
               cycle = (raw / 100).toFixed(1);
             }
+            if (!batCap && regexCap.test(line)) batCap = line.match(regexCap)[1];
+            if (!batMfg && regexMfg.test(line)) batMfg = line.match(regexMfg)[1];
+            if (!batTemp && regexTemp.test(line)) batTemp = line.match(regexTemp)[1];
 
-            if ((asoc || bsoh) && cycle) {
-              await reader.cancel();
-              break;
+            if (!ufsA && regexUfsA.test(line)) ufsA = line.match(regexUfsA)[1];
+            if (!ufsB && regexUfsB.test(line)) ufsB = line.match(regexUfsB)[1];
+            if (!preEol && regexPreEol.test(line)) preEol = line.match(regexPreEol)[1];
+
+            if (!model && regexModel.test(line)) model = line.match(regexModel)[1];
+            if (!soc && regexSoc.test(line)) soc = line.match(regexSoc)[1];
+            if (!androidVer && regexAndroid.test(line)) androidVer = line.match(regexAndroid)[1];
+            if (!oneuiVer && regexOneui.test(line)) oneuiVer = line.match(regexOneui)[1];
+            if (!buildDate && regexBuildDate.test(line)) buildDate = line.match(regexBuildDate)[1];
+            if (!bootReason && regexBoot.test(line)) {
+              const m = line.match(regexBoot);
+              bootReason = m[1] || m[2] || m[3];
             }
+            if (!uptime && regexUp.test(line)) uptime = line.match(regexUp)[1];
           }
-          if ((asoc || bsoh) && cycle) break;
         }
 
+        // 기본 카드 반영
         const finalHealth = asoc || bsoh;
         if (finalHealth) {
           healthVal.textContent = `${finalHealth}%`;
-          summaryText.textContent = '분석 완료';
+          summaryText.textContent = '종합 분석 완료';
 
           const hNum = parseInt(finalHealth, 10);
           if (hNum >= 85) {
@@ -594,8 +808,41 @@
           healthVal.textContent = '미발견';
           statusDetail.textContent = '로그에서 ASOC/BSOH 수치를 찾지 못했습니다.';
         }
-
         cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
+
+        // 상세 리포트 데이터 바인딩
+        repBatCap.textContent = batCap ? `${batCap} mAh` : '미기록';
+        if (batMfg && /^\d{8}$/.test(batMfg)) {
+          repBatMfg.textContent = `${batMfg.substring(0,4)}.${batMfg.substring(4,6)}.${batMfg.substring(6,8)}`;
+        } else {
+          repBatMfg.textContent = batMfg || '미기록';
+        }
+        if (batTemp) {
+          const tNum = parseFloat(batTemp);
+          repBatTemp.textContent = tNum > 100 ? `${(tNum/10).toFixed(1)}°C` : `${tNum.toFixed(1)}°C`;
+        } else {
+          repBatTemp.textContent = '미기록';
+        }
+
+        repUfsA.textContent = parseUfsLife(ufsA);
+        repUfsB.textContent = parseUfsLife(ufsB);
+        if (preEol) {
+          const p = parseInt(preEol, 16);
+          repPreEol.textContent = p === 1 ? '정상 (수명 여유)' : p === 2 ? '경고 (잔여 20% 미만)' : '긴급 조치 필요';
+        } else {
+          repPreEol.textContent = '정상 (추정)';
+        }
+
+        repModel.textContent = model || '미기록';
+        repSoc.textContent = soc ? soc.toUpperCase() : '미기록';
+        repOsVer.textContent = formatOneUi(oneuiVer, androidVer);
+        repBuildDate.textContent = buildDate ? buildDate.split(' ')[0] : '미기록';
+        repBootReason.textContent = bootReason || '정상 종료 (Normal)';
+        repUptime.textContent = uptime || '기록 없음';
+
+        // 🌟 추가정보 확인하기 버튼 활성화
+        btnOpenExtraInfo.disabled = false;
+        showToast("🎉 분석 완료! '추가정보 확인하기'를 눌러보세요.");
 
       } catch (err) {
         console.error(err);
@@ -606,3 +853,4 @@
   </script>
 </body>
 </html>
+
