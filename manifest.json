@@ -1,6 +1,6 @@
 {
   "name": "Galaxy Green Battery",
-  "short_name": "GreenBattery",
+  "short_name": "Galaxy Green Battery",
   "description": "갤럭시 배터리 실제 수명 및 충전 사이클 확인기",
   "start_url": "./index.html",
   "scope": "./",
