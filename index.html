@@ -53,7 +53,6 @@
       flex-direction: column;
     }
 
-    /* One UI 상단 시각 영역 */
     .viewing-area {
       padding: 44px 12px 20px 12px;
       display: flex;
@@ -84,7 +83,6 @@
       font-size: 0.95rem;
     }
 
-    /* One UI 카드 영역 */
     .interaction-area {
       display: flex;
       flex-direction: column;
@@ -134,7 +132,6 @@
       line-height: 1.4;
     }
 
-    /* 플로팅 액션 바 */
     .floating-bar-container {
       position: fixed;
       bottom: 24px;
@@ -187,7 +184,6 @@
       transform: scale(0.95);
     }
 
-    /* 바텀 시트 모달 공통 */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -251,7 +247,6 @@
       border-color: transparent;
     }
 
-    /* 추가 정보 리포트 카드 디자인 */
     .report-section {
       background: var(--oneui-bg);
       border-radius: 20px;
@@ -287,7 +282,6 @@
       text-align: right;
     }
 
-    /* 가이드 리스트 */
     .step-list {
       display: flex;
       flex-direction: column;
@@ -333,7 +327,6 @@
       line-height: 1.5;
     }
 
-    /* One UI 토스트 */
     .toast {
       position: fixed;
       top: 24px;
@@ -360,14 +353,12 @@
 </head>
 <body>
 
-  <!-- One UI 상단 시각 영역 -->
   <div class="viewing-area">
     <div class="badge">🌿 Galaxy Green Battery</div>
     <h1>Galaxy Green Battery</h1>
     <p>SysDump 로그의 BMS 원시 수치로 실배터리 수명을 분석합니다.</p>
   </div>
 
-  <!-- One UI 카드 인터랙션 영역 -->
   <div class="interaction-area">
     <div class="oneui-card">
       <div style="font-weight: 700; font-size: 1.1rem;">배터리 상태</div>
@@ -385,7 +376,6 @@
       </div>
       <div id="statusDetail" class="status-msg">하단 플로팅 메뉴에서 [파일 선택]을 누르세요.</div>
 
-      <!-- 🌟 추가정보 확인하기 버튼 (배터리 카드 내부 아래칸) -->
       <button class="pill-btn primary-pill" id="btnOpenExtraInfo" style="width: 100%; justify-content: center; margin-top: 18px; padding: 13px; font-size: 0.94rem;" disabled>
         🔍 추가정보 확인하기 (기기·저장소·배터리 상세)
       </button>
@@ -393,12 +383,11 @@
 
     <div class="oneui-card" style="padding: 16px 20px;">
       <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        🔒 <b>완전한 오프라인 분석</b>: 파일은 외부 서버로 전송되지 않으며 스마트폰 브라우저 내부 메모리에서만 안전하게 파싱됩니다.
+        💡 <b>파일 선택 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 <code>dumpstate_board.log</code>가 아닌 <b>용량이 가장 큰 <code>dumpState_[모델명]...log</code> 메인 파일</b>을 선택해야 모든 수치가 나옵니다.
       </div>
     </div>
   </div>
 
-  <!-- 하단 One UI 플로팅 액션 바 -->
   <div class="floating-bar-container">
     <div class="floating-bar">
       <button class="float-btn secondary" id="btnInstall" style="display: none;">
@@ -415,23 +404,31 @@
 
   <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
 
-  <!-- 🌟 추가정보 상세 리포트 바텀시트 모달 -->
+  <!-- 추가정보 바텀시트 모달 -->
   <div class="modal-overlay" id="extraInfoModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
       <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">기기 종합 진단 리포트</h3>
-      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 추출한 하드웨어 상세 정보입니다.</p>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 정밀 추출한 하드웨어 수치입니다.</p>
 
-      <!-- 1. 배터리 심층 진단 -->
+      <!-- 1. 배터리 정밀 진단 -->
       <div class="report-section">
         <div class="report-title">🔋 배터리 상세 지표</div>
         <div class="report-row">
-          <span class="report-label">실제 잔여 설계 용량</span>
-          <span class="report-val" id="repBatCap">--</span>
+          <span class="report-label">BSOH (실제 정밀 건강도)</span>
+          <span class="report-val" id="repBsoh">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">배터리 제조일자</span>
+          <span class="report-label">ASOC (보정 용량 기준)</span>
+          <span class="report-val" id="repAsoc">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">배터리 제조/조립일 (LLB)</span>
           <span class="report-val" id="repBatMfg">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">배터리 설계/최대 용량</span>
+          <span class="report-val" id="repBatCap">--</span>
         </div>
         <div class="report-row">
           <span class="report-label">역대 최고 기록 온도</span>
@@ -439,26 +436,26 @@
         </div>
       </div>
 
-      <!-- 2. UFS 저장소 수명 -->
+      <!-- 2. UFS 수명 -->
       <div class="report-section">
-        <div class="report-title">💾 UFS 저장장치 플래시 수명</div>
+        <div class="report-title">💾 UFS 저장장치 수명</div>
         <div class="report-row">
-          <span class="report-label">UFS Type A 블록 소모율</span>
+          <span class="report-label">UFS Type A 블록 소모</span>
           <span class="report-val" id="repUfsA" style="color: var(--oneui-green-dark);">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">UFS Type B 블록 소모율</span>
+          <span class="report-label">UFS Type B 블록 소모</span>
           <span class="report-val" id="repUfsB" style="color: var(--oneui-green-dark);">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">내장 메모리 수명 상태</span>
+          <span class="report-label">내장 메모리 종합 수명</span>
           <span class="report-val" id="repPreEol">--</span>
         </div>
       </div>
 
-      <!-- 3. 기기 및 펌웨어 사양 -->
+      <!-- 3. 기기 사양 -->
       <div class="report-section">
-        <div class="report-title">📱 기기 및 소프트웨어 사양</div>
+        <div class="report-title">📱 기기 및 펌웨어 사양</div>
         <div class="report-row">
           <span class="report-label">기기 모델명</span>
           <span class="report-val" id="repModel">--</span>
@@ -468,7 +465,7 @@
           <span class="report-val" id="repSoc">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">소프트웨어 버전</span>
+          <span class="report-label">운영체제 버전</span>
           <span class="report-val" id="repOsVer">--</span>
         </div>
         <div class="report-row">
@@ -479,9 +476,9 @@
 
       <!-- 4. 시스템 안정성 -->
       <div class="report-section">
-        <div class="report-title">⏱️ 시스템 안정성 및 부팅 이력</div>
+        <div class="report-title">⏱️ 시스템 가동 상태</div>
         <div class="report-row">
-          <span class="report-label">마지막 재부팅 사유</span>
+          <span class="report-label">마지막 부팅 사유</span>
           <span class="report-val" id="repBootReason">--</span>
         </div>
         <div class="report-row">
@@ -496,7 +493,7 @@
     </div>
   </div>
 
-  <!-- 가이드 바텀 시트 모달 -->
+  <!-- 가이드 모달 -->
   <div class="modal-overlay" id="guideModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
@@ -504,7 +501,6 @@
       <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">정확한 분석을 위해 아래 순서대로 진행해 주세요.</p>
 
       <div class="step-list">
-        <!-- 1단계: 보안 위험 자동 차단 해제 -->
         <div class="step-item">
           <div class="step-num">1</div>
           <div class="step-content">
@@ -522,7 +518,6 @@
           </div>
         </div>
 
-        <!-- 2단계: SysDump 진입 -->
         <div class="step-item">
           <div class="step-num">2</div>
           <div class="step-content">
@@ -535,7 +530,6 @@
           </div>
         </div>
 
-        <!-- 3단계: 로그 생성 -->
         <div class="step-item">
           <div class="step-num">3</div>
           <div class="step-content">
@@ -544,7 +538,6 @@
           </div>
         </div>
 
-        <!-- 4단계: 내장 메모리 복사 -->
         <div class="step-item">
           <div class="step-num">4</div>
           <div class="step-content">
@@ -553,12 +546,11 @@
           </div>
         </div>
 
-        <!-- 5단계: 파일 선택 -->
         <div class="step-item">
           <div class="step-num">5</div>
           <div class="step-content">
-            <b>로그 파일 선택</b><br>
-            하단 [파일 선택] 클릭 후 <code>내장 저장공간 > log</code> 폴더 안의 <code>dumpState_*.log</code>를 선택합니다.
+            <b>메인 덤프 파일 선택 (중요!)</b><br>
+            <code>내장 저장공간 > log</code> 폴더 안에서 <code>dumpstate_board.log</code>가 아닌 <b>용량이 가장 큰 <code>dumpState_[모델명]...log</code></b>를 선택하세요!
           </div>
         </div>
       </div>
@@ -569,7 +561,6 @@
     </div>
   </div>
 
-  <!-- 토스트 메시지 -->
   <div id="toast" class="toast"></div>
 
   <script>
@@ -583,7 +574,6 @@
       }, 2500);
     }
 
-    // 서비스 워커 등록
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
@@ -592,7 +582,6 @@
       });
     }
 
-    // PWA 설치 이벤트
     let deferredPrompt = null;
     const btnInstall = document.getElementById('btnInstall');
 
@@ -613,7 +602,6 @@
       }
     });
 
-    // UI 컨트롤러
     const fileInput = document.getElementById('fileInput');
     const btnUploadTrigger = document.getElementById('btnUploadTrigger');
     const btnOpenGuide = document.getElementById('btnOpenGuide');
@@ -632,9 +620,10 @@
     const summaryText = document.getElementById('summaryText');
     const statusDetail = document.getElementById('statusDetail');
 
-    // 리포트 상세 엘리먼트
-    const repBatCap = document.getElementById('repBatCap');
+    const repBsoh = document.getElementById('repBsoh');
+    const repAsoc = document.getElementById('repAsoc');
     const repBatMfg = document.getElementById('repBatMfg');
+    const repBatCap = document.getElementById('repBatCap');
     const repBatTemp = document.getElementById('repBatTemp');
     const repUfsA = document.getElementById('repUfsA');
     const repUfsB = document.getElementById('repUfsB');
@@ -653,7 +642,6 @@
       if (e.target === guideModal) guideModal.style.display = 'none';
     });
 
-    // 추가정보 모달 오픈/클로즈
     btnOpenExtraInfo.addEventListener('click', () => extraInfoModal.style.display = 'flex');
     btnCloseExtraInfo.addEventListener('click', () => extraInfoModal.style.display = 'none');
     extraInfoModal.addEventListener('click', (e) => {
@@ -678,20 +666,18 @@
       }
     });
 
-    // UFS 수명 텍스트 해석 함수
     function parseUfsLife(val) {
       if (!val) return '미기록';
       const num = parseInt(val, 16);
-      if (num === 1) return '0%~10% 소모 (신품급/매우 양호)';
+      if (num === 1) return '0%~10% 소모 (최상/신품급)';
       if (num === 2) return '10%~20% 소모 (매우 양호)';
       if (num === 3) return '20%~30% 소모 (양호)';
-      if (num >= 4 && num <= 7) return `${(num-1)*10}%~${num*10}% 소모 (정상 작동 범위)`;
-      if (num >= 8 && num <= 10) return `${(num-1)*10}%~${num*10}% 소모 (주의 단계)`;
-      if (num >= 11) return '수명 만료 임박 (교체 권장)';
+      if (num >= 4 && num <= 7) return `${(num-1)*10}%~${num*10}% 소모 (정상)`;
+      if (num >= 8 && num <= 10) return `${(num-1)*10}%~${num*10}% 소모 (주의)`;
+      if (num >= 11) return '수명 만료 임박';
       return `코드 0x${val}`;
     }
 
-    // One UI 버전 포맷팅 함수
     function formatOneUi(oneui, android) {
       let result = '';
       if (oneui) {
@@ -710,13 +696,13 @@
       return result || '정보 없음';
     }
 
-    // 대용량 로그 스트리밍 파서
+    // 🌟 정밀 정규표현식 파서 (대괄호 [...], 콜론, 쉼표, 다양한 기종 포맷 완벽 지원)
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      summaryText.textContent = `${file.name} 종합 분석 중...`;
-      statusDetail.textContent = '로그에서 배터리, UFS 수명, 기기 스펙을 추출하고 있습니다...';
+      summaryText.textContent = `${file.name} 분석 중...`;
+      statusDetail.textContent = '메인 BMS 데이터 및 하드웨어 로그를 정밀 탐색하고 있습니다...';
       healthVal.textContent = '...';
       cycleVal.textContent = '...';
       btnOpenExtraInfo.disabled = true;
@@ -726,25 +712,28 @@
         const decoder = new TextDecoder('utf-8');
         let remainder = '';
 
-        // 지표 변수들
         let asoc = null, bsoh = null, cycle = null;
         let batCap = null, batMfg = null, batTemp = null;
         let ufsA = null, ufsB = null, preEol = null;
         let model = null, soc = null, androidVer = null, oneuiVer = null, buildDate = null;
         let bootReason = null, uptime = null;
 
-        // 정규표현식
-        const regexAsoc = /(?:mSavedBatteryAsoc|ASOC)\s*[:=]\s*(\d+)/i;
-        const regexBsoh = /(?:mSavedBatteryBsoh|BSOH)\s*[:=]\s*(\d+)/i;
-        const regexUsage = /(?:mSavedBatteryUsage)\s*[:=]\s*(\d+)/i;
+        // 정규식 개선: 대괄호 `[` 허용, 오디오 ASoC 혼동 방지 위해 mSavedBattery 접두사 또는 DUMP 키워드 엄격 적용
+        const regexAsoc = /(?:mSavedBatteryAsoc|\/efs\/FactoryApp\/asoc)\s*[:=,]\s*\[?(\d+)\]?/i;
+        const regexBsoh = /(?:mSavedBatteryBsoh|\/efs\/FactoryApp\/bsoh|Unbiased BSOH|BSOH)\s*[:=,]\s*\[?(\d+(?:\.\d+)?)\]?/i;
+        
+        // 사이클: mSavedBatteryUsage, mSavedBatteryUsages, Cycle(486,65) 모두 지원
+        const regexUsage = /(?:mSavedBatteryUsage|mSavedBatteryUsages|BatteryUsage)\s*[:=,]\s*\[?(\d+)\]?/i;
+        const regexCycleFunc = /Cycle\((\d+)/i;
 
-        const regexCap = /(?:mSavedBatteryMaxCapacity|fg_fullcapnom|batt_capacity_max)\s*[:=]\s*(\d+)/i;
-        const regexMfg = /(?:mSavedBatteryMfgDate|batt_mfg_date)\s*[:=]\s*(\d+)/i;
-        const regexTemp = /(?:mSavedBatteryMaxTemp)\s*[:=]\s*(\d+)/i;
+        // 배터리 제조일: LLB CAL, LLB MAN, Battery first use date
+        const regexLlbCal = /(?:LLB CAL|LLB MAN|Battery first use date)\s*[:=]\s*\[?(\d{8})\]?/i;
+        const regexCap = /(?:mSavedBatteryMaxCapacity|fg_fullcapnom|batt_capacity_max)\s*[:=,]\s*\[?(\d+)\]?/i;
+        const regexTemp = /(?:mSavedBatteryMaxTemp)\s*[:=,]\s*\[?(\d+)\]?/i;
 
-        const regexUfsA = /(?:Device life time estimation type A|life_time_a)\s*[:=]\s*(?:0x)?([0-9a-fA-F]+)/i;
-        const regexUfsB = /(?:Device life time estimation type B|life_time_b)\s*[:=]\s*(?:0x)?([0-9a-fA-F]+)/i;
-        const regexPreEol = /Pre-EOL info\s*[:=]\s*(?:0x)?([0-9a-fA-F]+)/i;
+        const regexUfsA = /(?:Device life time estimation type A|life_time_a)\s*[:=,]\s*\[?(?:0x)?([0-9a-fA-F]+)\]?/i;
+        const regexUfsB = /(?:Device life time estimation type B|life_time_b)\s*[:=,]\s*\[?(?:0x)?([0-9a-fA-F]+)\]?/i;
+        const regexPreEol = /Pre-EOL info\s*[:=,]\s*\[?(?:0x)?([0-9a-fA-F]+)\]?/i;
 
         const regexModel = /\[ro\.product\.model\]:\s*\[(.*?)\]/i;
         const regexSoc = /\[(?:ro\.soc\.model\vert{}ro\.chipname\vert{}ro\.board\.platform)\]:\s*\[(.*?)\]/i;
@@ -763,14 +752,25 @@
           remainder = lines.pop();
 
           for (const line of lines) {
-            if (!asoc && regexAsoc.test(line)) asoc = line.match(regexAsoc)[1];
-            if (!bsoh && regexBsoh.test(line)) bsoh = line.match(regexBsoh)[1];
-            if (!cycle && regexUsage.test(line)) {
-              const raw = parseInt(line.match(regexUsage)[1], 10);
-              cycle = (raw / 100).toFixed(1);
+            if (!asoc && regexAsoc.test(line)) {
+              asoc = line.match(regexAsoc)[1];
+            }
+            if (!bsoh && regexBsoh.test(line)) {
+              bsoh = line.match(regexBsoh)[1];
+            }
+            if (!cycle) {
+              if (regexUsage.test(line)) {
+                const raw = parseInt(line.match(regexUsage)[1], 10);
+                cycle = raw >= 1000 ? (raw / 100).toFixed(1) : raw.toString();
+              } else if (regexCycleFunc.test(line)) {
+                cycle = line.match(regexCycleFunc)[1];
+              }
+            }
+
+            if (!batMfg && regexLlbCal.test(line)) {
+              batMfg = line.match(regexLlbCal)[1];
             }
             if (!batCap && regexCap.test(line)) batCap = line.match(regexCap)[1];
-            if (!batMfg && regexMfg.test(line)) batMfg = line.match(regexMfg)[1];
             if (!batTemp && regexTemp.test(line)) batTemp = line.match(regexTemp)[1];
 
             if (!ufsA && regexUfsA.test(line)) ufsA = line.match(regexUfsA)[1];
@@ -790,15 +790,22 @@
           }
         }
 
-        // 기본 카드 반영
-        const finalHealth = asoc || bsoh;
-        if (finalHealth) {
-          healthVal.textContent = `${finalHealth}%`;
+        // 🌟 핵심 판정: ASOC가 100이고 BSOH가 존재하면 실제 건강도인 BSOH를 우선 채택
+        let finalDisplayHealth = null;
+        if (bsoh) {
+          const bVal = parseFloat(bsoh);
+          finalDisplayHealth = bVal.toFixed(0);
+        } else if (asoc) {
+          finalDisplayHealth = asoc;
+        }
+
+        if (finalDisplayHealth) {
+          healthVal.textContent = `${finalDisplayHealth}%`;
           summaryText.textContent = '종합 분석 완료';
 
-          const hNum = parseInt(finalHealth, 10);
+          const hNum = parseInt(finalDisplayHealth, 10);
           if (hNum >= 85) {
-            statusDetail.textContent = '✨ 배터리 수명이 매우 건강합니다.';
+            statusDetail.textContent = '✨ 배터리 건강 상태가 매우 양호합니다.';
           } else if (hNum >= 80) {
             statusDetail.textContent = '⚡ 배터리 수명이 정상 작동 범위입니다.';
           } else {
@@ -806,17 +813,20 @@
           }
         } else {
           healthVal.textContent = '미발견';
-          statusDetail.textContent = '로그에서 ASOC/BSOH 수치를 찾지 못했습니다.';
+          statusDetail.textContent = '선택한 파일에 배터리 메인 덤프가 없습니다. dumpState_[기종명]...log 파일을 선택했는지 확인하세요.';
         }
+
         cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
 
-        // 상세 리포트 데이터 바인딩
-        repBatCap.textContent = batCap ? `${batCap} mAh` : '미기록';
+        // 상세 모달 바인딩
+        repBsoh.textContent = bsoh ? `${parseFloat(bsoh).toFixed(1)}%` : '미기록';
+        repAsoc.textContent = asoc ? `${asoc}%` : '미기록';
         if (batMfg && /^\d{8}$/.test(batMfg)) {
-          repBatMfg.textContent = `${batMfg.substring(0,4)}.${batMfg.substring(4,6)}.${batMfg.substring(6,8)}`;
+          repBatMfg.textContent = `${batMfg.substring(0,4)}년 ${batMfg.substring(4,6)}월 ${batMfg.substring(6,8)}일`;
         } else {
           repBatMfg.textContent = batMfg || '미기록';
         }
+        repBatCap.textContent = batCap ? `${batCap} mAh` : '미기록';
         if (batTemp) {
           const tNum = parseFloat(batTemp);
           repBatTemp.textContent = tNum > 100 ? `${(tNum/10).toFixed(1)}°C` : `${tNum.toFixed(1)}°C`;
@@ -840,9 +850,8 @@
         repBootReason.textContent = bootReason || '정상 종료 (Normal)';
         repUptime.textContent = uptime || '기록 없음';
 
-        // 🌟 추가정보 확인하기 버튼 활성화
         btnOpenExtraInfo.disabled = false;
-        showToast("🎉 분석 완료! '추가정보 확인하기'를 눌러보세요.");
+        showToast("🎉 분석 완료! [추가정보 확인하기]를 확인해 보세요.");
 
       } catch (err) {
         console.error(err);
