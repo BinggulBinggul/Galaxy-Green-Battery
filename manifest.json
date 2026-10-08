@@ -1,0 +1,19 @@
+{
+  "name": "Galaxy Green Battery",
+  "short_name": "GreenBattery",
+  "description": "갤럭시 배터리 실제 수명 및 충전 사이클 확인기",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#121316",
+  "theme_color": "#10B981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
