@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Galaxy Green Battery</title>
+  
+  <!-- PWA & 모바일 메타 설정 -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <meta name="theme-color" content="#10B981" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <style>
     :root {
       --oneui-bg: #F4F6F9;
@@ -42,9 +52,9 @@
       flex-direction: column;
     }
 
-    /* One UI Viewing Area (상단 여백 & 대형 타이틀) */
+    /* One UI 상단 시각 영역 */
     .viewing-area {
-      padding: 48px 12px 24px 12px;
+      padding: 44px 12px 20px 12px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -73,7 +83,7 @@
       font-size: 0.95rem;
     }
 
-    /* Interaction Area (카드 영역) */
+    /* 카드 영역 */
     .interaction-area {
       display: flex;
       flex-direction: column;
@@ -88,20 +98,19 @@
       border-radius: var(--oneui-radius);
       padding: 24px;
       box-shadow: var(--oneui-shadow);
-      transition: transform 0.2s ease;
+      border: 1px solid rgba(0, 0, 0, 0.03);
     }
 
-    /* 배터리 게이지 원형/수치 */
     .stat-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 14px;
       margin-top: 16px;
     }
     .stat-item {
       background: var(--oneui-bg);
-      border-radius: 18px;
-      padding: 16px;
+      border-radius: 20px;
+      padding: 18px 14px;
       text-align: center;
     }
     .stat-label {
@@ -110,21 +119,21 @@
       font-weight: 600;
     }
     .stat-value {
-      font-size: 1.7rem;
+      font-size: 1.75rem;
       font-weight: 800;
       color: var(--oneui-green);
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
-    /* 상태 메시지 */
     .status-msg {
       margin-top: 14px;
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       color: var(--oneui-text-sub);
       text-align: center;
+      line-height: 1.4;
     }
 
-    /* One UI Floating Action Menu */
+    /* 하단 One UI 플로팅 메뉴 */
     .floating-bar-container {
       position: fixed;
       bottom: 24px;
@@ -132,14 +141,14 @@
       right: 0;
       display: flex;
       justify-content: center;
-      padding: 0 20px;
+      padding: 0 16px;
       z-index: 100;
     }
     .floating-bar {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(30, 32, 36, 0.85);
+      gap: 6px;
+      background: rgba(30, 32, 36, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       padding: 8px 12px;
@@ -148,19 +157,19 @@
     }
     @media (prefers-color-scheme: light) {
       .floating-bar {
-        background: rgba(255, 255, 255, 0.88);
+        background: rgba(255, 255, 255, 0.92);
         border: 1px solid rgba(0, 0, 0, 0.08);
       }
     }
     .float-btn {
       border: none;
       outline: none;
-      padding: 12px 20px;
+      padding: 12px 18px;
       border-radius: 999px;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 700;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
       transition: all 0.2s;
@@ -174,10 +183,10 @@
       color: #FFFFFF;
     }
     .float-btn:active {
-      transform: scale(0.96);
+      transform: scale(0.95);
     }
 
-    /* Bottom Sheet / Guide Modal */
+    /* 가이드 바텀 시트 */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -193,7 +202,7 @@
       max-width: 500px;
       margin: 0 auto;
       border-radius: 32px 32px 0 0;
-      padding: 24px 24px 44px 24px;
+      padding: 20px 24px 44px 24px;
       max-height: 85vh;
       overflow-y: auto;
       animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -207,13 +216,13 @@
       height: 5px;
       background: #D1D5DB;
       border-radius: 999px;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 18px auto;
     }
     .step-list {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      margin-top: 16px;
+      margin-top: 14px;
     }
     .step-item {
       display: flex;
@@ -221,8 +230,8 @@
       align-items: flex-start;
     }
     .step-num {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       background: var(--oneui-green);
       color: #FFF;
@@ -240,14 +249,14 @@
     .action-btn-row {
       display: flex;
       gap: 8px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
     .pill-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       text-decoration: none;
-      padding: 9px 14px;
+      padding: 8px 12px;
       border-radius: 12px;
       font-size: 0.85rem;
       font-weight: 600;
@@ -260,22 +269,20 @@
 </head>
 <body>
 
-  <!-- One UI 상단 시각 영역 -->
   <div class="viewing-area">
     <div class="badge">🌿 Galaxy Green Battery</div>
     <h1>배터리 수명 분석</h1>
-    <p>SysDump 로그를 분석해 정확한 실 수명을 확인합니다.</p>
+    <p>SysDump 로그의 BMS 원시 수치를 분석합니다.</p>
   </div>
 
-  <!-- One UI 인터랙션 영역 -->
   <div class="interaction-area">
     <div class="oneui-card">
-      <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">배터리 상태</div>
-      <div id="summaryText" style="color: var(--oneui-text-sub); font-size: 0.88rem;">로그 파일이 업로드되지 않았습니다.</div>
+      <div style="font-weight: 700; font-size: 1.1rem;">배터리 상태</div>
+      <div id="summaryText" style="color: var(--oneui-text-sub); font-size: 0.88rem; margin-top: 4px;">로그 파일이 아직 선택되지 않았습니다.</div>
 
       <div class="stat-grid">
         <div class="stat-item">
-          <div class="stat-label">배터리 건강도 (ASOC/BSOH)</div>
+          <div class="stat-label">배터리 수명 (ASOC/BSOH)</div>
           <div id="healthVal" class="stat-value">--%</div>
         </div>
         <div class="stat-item">
@@ -283,19 +290,22 @@
           <div id="cycleVal" class="stat-value">--회</div>
         </div>
       </div>
-      <div id="statusDetail" class="status-msg">하단 플로팅 메뉴에서 파일을 선택하세요.</div>
+      <div id="statusDetail" class="status-msg">하단 플로팅 메뉴에서 [파일 선택]을 누르세요.</div>
     </div>
 
-    <div class="oneui-card" style="padding: 18px 24px;">
+    <div class="oneui-card" style="padding: 16px 20px;">
       <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        🔒 <b>보안 안심:</b> 선택한 로그 파일은 외부 서버로 업로드되지 않으며, 스마트폰 웹 브라우저 메모리 내에서만 즉시 분석된 후 안전하게 소멸됩니다.
+        🔒 <b>완전한 오프라인 분석</b>: 파일은 서버로 전송되지 않으며, 스마트폰 웹 브라우저 내부에서만 파싱됩니다.
       </div>
     </div>
   </div>
 
-  <!-- 플로팅 하단 메뉴 (One UI Floating Bar) -->
+  <!-- 플로팅 메뉴 -->
   <div class="floating-bar-container">
     <div class="floating-bar">
+      <button class="float-btn secondary" id="btnInstall" style="display: none;">
+        📲 앱 설치
+      </button>
       <button class="float-btn secondary" id="btnOpenGuide">
         📖 가이드
       </button>
@@ -307,21 +317,21 @@
 
   <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
 
-  <!-- 가이드 바텀시트 모달 -->
+  <!-- 가이드 바텀 시트 -->
   <div class="modal-overlay" id="guideModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
-      <h3 style="margin: 0 0 8px 0; font-size: 1.25rem;">로그 추출 4단계 가이드</h3>
-      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.88rem;">갤럭시 기본 전화 앱과 내 파일 앱을 이용해 추출합니다.</p>
+      <h3 style="margin: 0 0 6px 0; font-size: 1.2rem;">로그 추출 4단계 가이드</h3>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">삼성 전화 앱과 내 파일 앱을 이용해 추출합니다.</p>
 
       <div class="step-list">
         <div class="step-item">
           <div class="step-num">1</div>
           <div class="step-content">
-            <b>SysDump 진입 코드 실행</b><br>
-            전화 앱에서 <code>*#9900#</code>을 입력합니다.
+            <b>SysDump 코드 실행</b><br>
+            전화 다이얼에서 <code>*#9900#</code>을 입력합니다.
             <div class="action-btn-row">
-              <a href="tel:*%239900%23" class="pill-btn">📞 전화 앱 열기</a>
+              <a href="tel:*%239900%23" class="pill-btn">📞 전화 다이얼 열기</a>
               <button class="pill-btn" id="btnCopyCode">📋 코드 복사</button>
             </div>
           </div>
@@ -346,8 +356,8 @@
         <div class="step-item">
           <div class="step-num">4</div>
           <div class="step-content">
-            <b>웹앱에서 파일 선택</b><br>
-            하단 [파일 선택]을 누른 뒤 <code>내장 저장공간 > log</code> 폴더의 <code>dumpState_*.log</code> 파일을 선택합니다.
+            <b>로그 파일 선택</b><br>
+            하단 [파일 선택] 클릭 후 <code>내장 저장공간 > log</code> 폴더의 <code>dumpState_*.log</code>를 선택합니다.
           </div>
         </div>
       </div>
@@ -359,6 +369,37 @@
   </div>
 
   <script>
+    // 서비스 워커 등록 (PWA 앱 설치 가능 조건)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg error:', err));
+      });
+    }
+
+    // PWA 앱 설치 이벤트 처리
+    let deferredPrompt = null;
+    const btnInstall = document.getElementById('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      btnInstall.style.display = 'inline-flex';
+    });
+
+    btnInstall.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          btnInstall.style.display = 'none';
+        }
+        deferredPrompt = null;
+      } else {
+        alert("브라우저 메뉴(⋮)에서 '홈 화면에 추가' 또는 '앱 설치'를 눌러 설치할 수 있습니다.");
+      }
+    });
+
+    // UI 요소
     const fileInput = document.getElementById('fileInput');
     const btnUploadTrigger = document.getElementById('btnUploadTrigger');
     const btnOpenGuide = document.getElementById('btnOpenGuide');
@@ -371,33 +412,29 @@
     const summaryText = document.getElementById('summaryText');
     const statusDetail = document.getElementById('statusDetail');
 
-    // 플로팅 메뉴 파일 선택 연결
     btnUploadTrigger.addEventListener('click', () => fileInput.click());
-
-    // 가이드 모달 토글
     btnOpenGuide.addEventListener('click', () => guideModal.style.display = 'flex');
     btnCloseGuide.addEventListener('click', () => guideModal.style.display = 'none');
     guideModal.addEventListener('click', (e) => {
       if (e.target === guideModal) guideModal.style.display = 'none';
     });
 
-    // SysDump 코드 복사 버튼
     btnCopyCode.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText('*#9900#');
-        alert('*#9900# 코드가 복사되었습니다. 전화 키패드에 붙여넣으세요.');
+        alert('*#9900# 코드가 복사되었습니다. 전화 다이얼에 붙여넣으세요.');
       } catch (err) {
-        alert('복사 권한이 없어 직접 입력해주세요: *#9900#');
+        alert('코드: *#9900#');
       }
     });
 
-    // 로그 파일 스트리밍 파서 (대용량 메모리 절약)
+    // 파일 스트리밍 파서
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       summaryText.textContent = `${file.name} 분석 중...`;
-      statusDetail.textContent = '로그에서 배터리 BMS 데이터를 검색하고 있습니다...';
+      statusDetail.textContent = '로그 파일에서 BMS 배터리 지표를 추출하고 있습니다...';
       healthVal.textContent = '...';
       cycleVal.textContent = '...';
 
@@ -451,13 +488,13 @@
           if (hNum >= 85) {
             statusDetail.textContent = '✨ 배터리 건강 상태가 매우 양호합니다.';
           } else if (hNum >= 80) {
-            statusDetail.textContent = '⚡ 배터리 수명이 정상 범위입니다.';
+            statusDetail.textContent = '⚡ 배터리 수명이 정상 작동 범위입니다.';
           } else {
             statusDetail.textContent = '⚠️ 배터리 교체를 고려할 시점입니다 (80% 미만).';
           }
         } else {
           healthVal.textContent = '미발견';
-          statusDetail.textContent = '로그 파일에서 ASOC/BSOH 값을 찾지 못했습니다.';
+          statusDetail.textContent = '로그에서 ASOC/BSOH 수치를 찾지 못했습니다.';
         }
 
         cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
@@ -465,9 +502,10 @@
       } catch (err) {
         console.error(err);
         summaryText.textContent = '오류 발생';
-        statusDetail.textContent = '파일을 읽는 도중 오류가 발생했습니다.';
+        statusDetail.textContent = '파일을 파싱하는 도중 오류가 발생했습니다.';
       }
     });
   </script>
 </body>
 </html>
+
