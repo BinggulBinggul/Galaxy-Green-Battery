@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Galaxy Green Battery</title>
   
-  <!-- PWA & 모바일 메타 설정 -->
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
@@ -383,7 +382,7 @@
 
     <div class="oneui-card" style="padding: 16px 20px;">
       <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        💡 <b>파일 선택 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 <code>dumpstate_board.log</code>가 아닌 <b>용량이 가장 큰 <code>dumpState_[모델명]...log</code> 메인 파일</b>을 선택해야 모든 수치가 나옵니다.
+        💡 <b>파일 선택 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 용량이 수십 MB 이상인 <b>메인 파일(<code>dumpState_[기종명]...log</code>)</b>을 선택해야 가장 많은 정보가 분석됩니다.
       </div>
     </div>
   </div>
@@ -409,7 +408,7 @@
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
       <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">기기 종합 진단 리포트</h3>
-      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 정밀 추출한 하드웨어 수치입니다.</p>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 추출한 하드웨어 상세 정보입니다.</p>
 
       <!-- 1. 배터리 정밀 진단 -->
       <div class="report-section">
@@ -436,20 +435,23 @@
         </div>
       </div>
 
-      <!-- 2. UFS 수명 -->
+      <!-- 2. UFS 저장장치 수명 -->
       <div class="report-section">
-        <div class="report-title">💾 UFS 저장장치 수명</div>
+        <div class="report-title">💾 UFS 저장장치 플래시 수명</div>
         <div class="report-row">
-          <span class="report-label">UFS Type A 블록 소모</span>
+          <span class="report-label">UFS Type A (SLC 영역)</span>
           <span class="report-val" id="repUfsA" style="color: var(--oneui-green-dark);">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">UFS Type B 블록 소모</span>
+          <span class="report-label">UFS Type B (사용자 영역)</span>
           <span class="report-val" id="repUfsB" style="color: var(--oneui-green-dark);">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">내장 메모리 종합 수명</span>
+          <span class="report-label">예비 블록 상태 (Pre-EOL)</span>
           <span class="report-val" id="repPreEol">--</span>
+        </div>
+        <div id="ufsNote" style="font-size: 0.78rem; color: var(--oneui-text-sub); margin-top: 8px; line-height: 1.4; display: none;">
+          ℹ️ UFS 수명이 미기록인 경우: 삼성 공식 보안 정책상 일반 정식 펌웨어에서 저장장치 헬스 덤프 출력이 제한된 모델입니다.
         </div>
       </div>
 
@@ -628,6 +630,7 @@
     const repUfsA = document.getElementById('repUfsA');
     const repUfsB = document.getElementById('repUfsB');
     const repPreEol = document.getElementById('repPreEol');
+    const ufsNote = document.getElementById('ufsNote');
     const repModel = document.getElementById('repModel');
     const repSoc = document.getElementById('repSoc');
     const repOsVer = document.getElementById('repOsVer');
@@ -667,8 +670,9 @@
     });
 
     function parseUfsLife(val) {
-      if (!val) return '미기록';
+      if (!val) return '미기록 (기종 제한)';
       const num = parseInt(val, 16);
+      if (isNaN(num) || num === 0) return '정상 (0% 소모)';
       if (num === 1) return '0%~10% 소모 (최상/신품급)';
       if (num === 2) return '10%~20% 소모 (매우 양호)';
       if (num === 3) return '20%~30% 소모 (양호)';
@@ -696,7 +700,7 @@
       return result || '정보 없음';
     }
 
-    // 🌟 정밀 정규표현식 파서 (대괄호 [...], 콜론, 쉼표, 다양한 기종 포맷 완벽 지원)
+    // 🌟 확장 정규표현식 파서
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -718,22 +722,18 @@
         let model = null, soc = null, androidVer = null, oneuiVer = null, buildDate = null;
         let bootReason = null, uptime = null;
 
-        // 정규식 개선: 대괄호 `[` 허용, 오디오 ASoC 혼동 방지 위해 mSavedBattery 접두사 또는 DUMP 키워드 엄격 적용
         const regexAsoc = /(?:mSavedBatteryAsoc|\/efs\/FactoryApp\/asoc)\s*[:=,]\s*\[?(\d+)\]?/i;
         const regexBsoh = /(?:mSavedBatteryBsoh|\/efs\/FactoryApp\/bsoh|Unbiased BSOH|BSOH)\s*[:=,]\s*\[?(\d+(?:\.\d+)?)\]?/i;
-        
-        // 사이클: mSavedBatteryUsage, mSavedBatteryUsages, Cycle(486,65) 모두 지원
         const regexUsage = /(?:mSavedBatteryUsage|mSavedBatteryUsages|BatteryUsage)\s*[:=,]\s*\[?(\d+)\]?/i;
         const regexCycleFunc = /Cycle\((\d+)/i;
-
-        // 배터리 제조일: LLB CAL, LLB MAN, Battery first use date
         const regexLlbCal = /(?:LLB CAL|LLB MAN|Battery first use date)\s*[:=]\s*\[?(\d{8})\]?/i;
         const regexCap = /(?:mSavedBatteryMaxCapacity|fg_fullcapnom|batt_capacity_max)\s*[:=,]\s*\[?(\d+)\]?/i;
         const regexTemp = /(?:mSavedBatteryMaxTemp)\s*[:=,]\s*\[?(\d+)\]?/i;
 
-        const regexUfsA = /(?:Device life time estimation type A|life_time_a)\s*[:=,]\s*\[?(?:0x)?([0-9a-fA-F]+)\]?/i;
-        const regexUfsB = /(?:Device life time estimation type B|life_time_b)\s*[:=,]\s*\[?(?:0x)?([0-9a-fA-F]+)\]?/i;
-        const regexPreEol = /Pre-EOL info\s*[:=,]\s*\[?(?:0x)?([0-9a-fA-F]+)\]?/i;
+        // UFS/eMMC 정밀 포괄 정규표현식
+        const regexUfsA = /(?:Device life time estimation type A|bDeviceLifeTimeEstA|life_time_estimation_a|life_time_a|Storage Life Time A)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
+        const regexUfsB = /(?:Device life time estimation type B|bDeviceLifeTimeEstB|life_time_estimation_b|life_time_b|Storage Life Time B)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
+        const regexPreEol = /(?:Pre-EOL info|bPreEOLInfo|eol_info|Pre EOL)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
 
         const regexModel = /\[ro\.product\.model\]:\s*\[(.*?)\]/i;
         const regexSoc = /\[(?:ro\.soc\.model\vert{}ro\.chipname\vert{}ro\.board\.platform)\]:\s*\[(.*?)\]/i;
@@ -752,12 +752,8 @@
           remainder = lines.pop();
 
           for (const line of lines) {
-            if (!asoc && regexAsoc.test(line)) {
-              asoc = line.match(regexAsoc)[1];
-            }
-            if (!bsoh && regexBsoh.test(line)) {
-              bsoh = line.match(regexBsoh)[1];
-            }
+            if (!asoc && regexAsoc.test(line)) asoc = line.match(regexAsoc)[1];
+            if (!bsoh && regexBsoh.test(line)) bsoh = line.match(regexBsoh)[1];
             if (!cycle) {
               if (regexUsage.test(line)) {
                 const raw = parseInt(line.match(regexUsage)[1], 10);
@@ -767,12 +763,11 @@
               }
             }
 
-            if (!batMfg && regexLlbCal.test(line)) {
-              batMfg = line.match(regexLlbCal)[1];
-            }
+            if (!batMfg && regexLlbCal.test(line)) batMfg = line.match(regexLlbCal)[1];
             if (!batCap && regexCap.test(line)) batCap = line.match(regexCap)[1];
             if (!batTemp && regexTemp.test(line)) batTemp = line.match(regexTemp)[1];
 
+            // UFS 탐색
             if (!ufsA && regexUfsA.test(line)) ufsA = line.match(regexUfsA)[1];
             if (!ufsB && regexUfsB.test(line)) ufsB = line.match(regexUfsB)[1];
             if (!preEol && regexPreEol.test(line)) preEol = line.match(regexPreEol)[1];
@@ -790,7 +785,6 @@
           }
         }
 
-        // 🌟 핵심 판정: ASOC가 100이고 BSOH가 존재하면 실제 건강도인 BSOH를 우선 채택
         let finalDisplayHealth = null;
         if (bsoh) {
           const bVal = parseFloat(bsoh);
@@ -813,12 +807,11 @@
           }
         } else {
           healthVal.textContent = '미발견';
-          statusDetail.textContent = '선택한 파일에 배터리 메인 덤프가 없습니다. dumpState_[기종명]...log 파일을 선택했는지 확인하세요.';
+          statusDetail.textContent = '선택한 파일에 배터리 메인 덤프가 없습니다. 가장 용량이 큰 dumpState_*.log 파일을 선택하세요.';
         }
 
         cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
 
-        // 상세 모달 바인딩
         repBsoh.textContent = bsoh ? `${parseFloat(bsoh).toFixed(1)}%` : '미기록';
         repAsoc.textContent = asoc ? `${asoc}%` : '미기록';
         if (batMfg && /^\d{8}$/.test(batMfg)) {
@@ -834,13 +827,21 @@
           repBatTemp.textContent = '미기록';
         }
 
+        // UFS 결과 반영 및 안내문 제어
         repUfsA.textContent = parseUfsLife(ufsA);
         repUfsB.textContent = parseUfsLife(ufsB);
         if (preEol) {
           const p = parseInt(preEol, 16);
-          repPreEol.textContent = p === 1 ? '정상 (수명 여유)' : p === 2 ? '경고 (잔여 20% 미만)' : '긴급 조치 필요';
+          repPreEol.textContent = p === 1 ? '정상 (수명 여유)' : p === 2 ? '경고 (잔여 20% 미만)' : '긴급 교체 필요';
         } else {
-          repPreEol.textContent = '정상 (추정)';
+          repPreEol.textContent = (ufsA || ufsB) ? '정상 (추정)' : '미기록 (기종 제한)';
+        }
+
+        // UFS 데이터가 없는 기종일 경우 안내문 표시
+        if (!ufsA && !ufsB && !preEol) {
+          ufsNote.style.display = 'block';
+        } else {
+          ufsNote.style.display = 'none';
         }
 
         repModel.textContent = model || '미기록';
@@ -862,4 +863,3 @@
   </script>
 </body>
 </html>
-
