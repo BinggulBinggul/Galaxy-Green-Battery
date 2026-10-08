@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Galaxy Green Battery</title>
+  <style>
+    :root {
+      --oneui-bg: #F4F6F9;
+      --oneui-card: #FFFFFF;
+      --oneui-text-main: #111827;
+      --oneui-text-sub: #6B7280;
+      --oneui-green: #10B981;
+      --oneui-green-light: #D1FAE5;
+      --oneui-green-dark: #059669;
+      --oneui-radius: 26px;
+      --oneui-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --oneui-bg: #121316;
+        --oneui-card: #1E2024;
+        --oneui-text-main: #F9FAFB;
+        --oneui-text-sub: #9CA3AF;
+        --oneui-green: #10B981;
+        --oneui-green-light: #064E3B;
+        --oneui-green-dark: #34D399;
+        --oneui-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: 0 20px 120px 20px;
+      background-color: var(--oneui-bg);
+      color: var(--oneui-text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Samsung Sans", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* One UI Viewing Area (상단 여백 & 대형 타이틀) */
+    .viewing-area {
+      padding: 48px 12px 24px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--oneui-green-light);
+      color: var(--oneui-green-dark);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      width: fit-content;
+    }
+    .viewing-area h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      margin: 4px 0 0 0;
+      letter-spacing: -0.03em;
+    }
+    .viewing-area p {
+      margin: 0;
+      color: var(--oneui-text-sub);
+      font-size: 0.95rem;
+    }
+
+    /* Interaction Area (카드 영역) */
+    .interaction-area {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .oneui-card {
+      background: var(--oneui-card);
+      border-radius: var(--oneui-radius);
+      padding: 24px;
+      box-shadow: var(--oneui-shadow);
+      transition: transform 0.2s ease;
+    }
+
+    /* 배터리 게이지 원형/수치 */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .stat-item {
+      background: var(--oneui-bg);
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--oneui-text-sub);
+      font-weight: 600;
+    }
+    .stat-value {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--oneui-green);
+      margin-top: 4px;
+    }
+
+    /* 상태 메시지 */
+    .status-msg {
+      margin-top: 14px;
+      font-size: 0.88rem;
+      color: var(--oneui-text-sub);
+      text-align: center;
+    }
+
+    /* One UI Floating Action Menu */
+    .floating-bar-container {
+      position: fixed;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      padding: 0 20px;
+      z-index: 100;
+    }
+    .floating-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(30, 32, 36, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 8px 12px;
+      border-radius: 999px;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+    }
+    @media (prefers-color-scheme: light) {
+      .floating-bar {
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+    }
+    .float-btn {
+      border: none;
+      outline: none;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .float-btn.secondary {
+      background: transparent;
+      color: var(--oneui-text-main);
+    }
+    .float-btn.primary {
+      background: var(--oneui-green);
+      color: #FFFFFF;
+    }
+    .float-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Bottom Sheet / Guide Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      z-index: 200;
+    }
+    .modal-sheet {
+      background: var(--oneui-card);
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      border-radius: 32px 32px 0 0;
+      padding: 24px 24px 44px 24px;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .sheet-handle {
+      width: 44px;
+      height: 5px;
+      background: #D1D5DB;
+      border-radius: 999px;
+      margin: 0 auto 20px auto;
+    }
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .step-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--oneui-green);
+      color: #FFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-content {
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .action-btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: var(--oneui-bg);
+      color: var(--oneui-text-main);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- One UI 상단 시각 영역 -->
+  <div class="viewing-area">
+    <div class="badge">🌿 Galaxy Green Battery</div>
+    <h1>배터리 수명 분석</h1>
+    <p>SysDump 로그를 분석해 정확한 실 수명을 확인합니다.</p>
+  </div>
+
+  <!-- One UI 인터랙션 영역 -->
+  <div class="interaction-area">
+    <div class="oneui-card">
+      <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 4px;">배터리 상태</div>
+      <div id="summaryText" style="color: var(--oneui-text-sub); font-size: 0.88rem;">로그 파일이 업로드되지 않았습니다.</div>
+
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="stat-label">배터리 건강도 (ASOC/BSOH)</div>
+          <div id="healthVal" class="stat-value">--%</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">충전 사이클</div>
+          <div id="cycleVal" class="stat-value">--회</div>
+        </div>
+      </div>
+      <div id="statusDetail" class="status-msg">하단 플로팅 메뉴에서 파일을 선택하세요.</div>
+    </div>
+
+    <div class="oneui-card" style="padding: 18px 24px;">
+      <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
+        🔒 <b>보안 안심:</b> 선택한 로그 파일은 외부 서버로 업로드되지 않으며, 스마트폰 웹 브라우저 메모리 내에서만 즉시 분석된 후 안전하게 소멸됩니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 플로팅 하단 메뉴 (One UI Floating Bar) -->
+  <div class="floating-bar-container">
+    <div class="floating-bar">
+      <button class="float-btn secondary" id="btnOpenGuide">
+        📖 가이드
+      </button>
+      <button class="float-btn primary" id="btnUploadTrigger">
+        📂 파일 선택
+      </button>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
+
+  <!-- 가이드 바텀시트 모달 -->
+  <div class="modal-overlay" id="guideModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="margin: 0 0 8px 0; font-size: 1.25rem;">로그 추출 4단계 가이드</h3>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.88rem;">갤럭시 기본 전화 앱과 내 파일 앱을 이용해 추출합니다.</p>
+
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <b>SysDump 진입 코드 실행</b><br>
+            전화 앱에서 <code>*#9900#</code>을 입력합니다.
+            <div class="action-btn-row">
+              <a href="tel:*%239900%23" class="pill-btn">📞 전화 앱 열기</a>
+              <button class="pill-btn" id="btnCopyCode">📋 코드 복사</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <b>로그 생성</b><br>
+            메뉴 최상단의 <b>Run dumpstate/logcat</b>을 누르고 1~2분 뒤 "Dump Result" 팝업이 뜨면 [OK]를 누릅니다.
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <b>저장공간 복사</b><br>
+            아래쪽의 <b>Copy to sdcard</b>를 누릅니다. (복사 완료 창이 뜰 때까지 대기)
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <b>웹앱에서 파일 선택</b><br>
+            하단 [파일 선택]을 누른 뒤 <code>내장 저장공간 > log</code> 폴더의 <code>dumpState_*.log</code> 파일을 선택합니다.
+          </div>
+        </div>
+      </div>
+
+      <button class="float-btn primary" id="btnCloseGuide" style="width: 100%; justify-content: center; margin-top: 24px;">
+        확인 완료
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const btnUploadTrigger = document.getElementById('btnUploadTrigger');
+    const btnOpenGuide = document.getElementById('btnOpenGuide');
+    const btnCloseGuide = document.getElementById('btnCloseGuide');
+    const guideModal = document.getElementById('guideModal');
+    const btnCopyCode = document.getElementById('btnCopyCode');
+
+    const healthVal = document.getElementById('healthVal');
+    const cycleVal = document.getElementById('cycleVal');
+    const summaryText = document.getElementById('summaryText');
+    const statusDetail = document.getElementById('statusDetail');
+
+    // 플로팅 메뉴 파일 선택 연결
+    btnUploadTrigger.addEventListener('click', () => fileInput.click());
+
+    // 가이드 모달 토글
+    btnOpenGuide.addEventListener('click', () => guideModal.style.display = 'flex');
+    btnCloseGuide.addEventListener('click', () => guideModal.style.display = 'none');
+    guideModal.addEventListener('click', (e) => {
+      if (e.target === guideModal) guideModal.style.display = 'none';
+    });
+
+    // SysDump 코드 복사 버튼
+    btnCopyCode.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText('*#9900#');
+        alert('*#9900# 코드가 복사되었습니다. 전화 키패드에 붙여넣으세요.');
+      } catch (err) {
+        alert('복사 권한이 없어 직접 입력해주세요: *#9900#');
+      }
+    });
+
+    // 로그 파일 스트리밍 파서 (대용량 메모리 절약)
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      summaryText.textContent = `${file.name} 분석 중...`;
+      statusDetail.textContent = '로그에서 배터리 BMS 데이터를 검색하고 있습니다...';
+      healthVal.textContent = '...';
+      cycleVal.textContent = '...';
+
+      try {
+        const reader = file.stream().getReader();
+        const decoder = new TextDecoder('utf-8');
+        let remainder = '';
+
+        let asoc = null;
+        let bsoh = null;
+        let cycle = null;
+
+        const regexAsoc = /(?:mSavedBatteryAsoc|ASOC)\s*[:=]\s*(\d+)/i;
+        const regexBsoh = /(?:mSavedBatteryBsoh|BSOH)\s*[:=]\s*(\d+)/i;
+        const regexUsage = /mSavedBatteryUsage\s*[:=]\s*(\d+)/i;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunkText = remainder + decoder.decode(value, { stream: true });
+          const lines = chunkText.split('\n');
+          remainder = lines.pop();
+
+          for (const line of lines) {
+            if (!asoc && regexAsoc.test(line)) {
+              asoc = line.match(regexAsoc)[1];
+            }
+            if (!bsoh && regexBsoh.test(line)) {
+              bsoh = line.match(regexBsoh)[1];
+            }
+            if (!cycle && regexUsage.test(line)) {
+              const raw = parseInt(line.match(regexUsage)[1], 10);
+              cycle = (raw / 100).toFixed(1);
+            }
+
+            if ((asoc || bsoh) && cycle) {
+              await reader.cancel();
+              break;
+            }
+          }
+          if ((asoc || bsoh) && cycle) break;
+        }
+
+        const finalHealth = asoc || bsoh;
+        if (finalHealth) {
+          healthVal.textContent = `${finalHealth}%`;
+          summaryText.textContent = '분석 완료';
+
+          const hNum = parseInt(finalHealth, 10);
+          if (hNum >= 85) {
+            statusDetail.textContent = '✨ 배터리 건강 상태가 매우 양호합니다.';
+          } else if (hNum >= 80) {
+            statusDetail.textContent = '⚡ 배터리 수명이 정상 범위입니다.';
+          } else {
+            statusDetail.textContent = '⚠️ 배터리 교체를 고려할 시점입니다 (80% 미만).';
+          }
+        } else {
+          healthVal.textContent = '미발견';
+          statusDetail.textContent = '로그 파일에서 ASOC/BSOH 값을 찾지 못했습니다.';
+        }
+
+        cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
+
+      } catch (err) {
+        console.error(err);
+        summaryText.textContent = '오류 발생';
+        statusDetail.textContent = '파일을 읽는 도중 오류가 발생했습니다.';
+      }
+    });
+  </script>
+</body>
+</html>
