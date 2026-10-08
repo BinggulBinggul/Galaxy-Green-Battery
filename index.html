@@ -681,7 +681,7 @@
       }
     });
 
-    // 🌟 프로세서 친숙한 이름 변환 딕셔너리
+    // 🌟 프로세서 친숙한 이름 매핑 (스냅드래곤 8 Elite 및 최신 플래그십 대응)
     const SOC_MAP = {
       'SM8750': '스냅드래곤 8 Elite (SM8750)',
       'SUN': '스냅드래곤 8 Elite',
@@ -703,6 +703,8 @@
       'SM7475': '스냅드래곤 7+ Gen 2',
       'SM7450': '스냅드래곤 7 Gen 1',
       'SM7325': '스냅드래곤 778G',
+      'EXYNOS2500': '엑시노스 2500',
+      'S5E9955': '엑시노스 2500 (S5E9955)',
       'EXYNOS2400': '엑시노스 2400',
       'S5E9945': '엑시노스 2400 (S5E9945)',
       'EXYNOS2200': '엑시노스 2200',
@@ -721,6 +723,15 @@
       'S5E8825': '엑시노스 1280'
     };
 
+    // 🌟 스택 트레이스 및 C++ 네임스페이스 기호 차단 필터
+    function isValidSoc(s) {
+      if (!s) return false;
+      const clean = s.trim();
+      if (/[:()\/\\@+]|BuildId/i.test(clean)) return false;
+      if (clean.length > 40) return false;
+      return true;
+    }
+
     function formatSocName(raw) {
       if (!raw) return '미기록';
       const clean = raw.toUpperCase().trim();
@@ -731,8 +742,20 @@
       return raw;
     }
 
-    // 🌟 모델명 펫네임 매핑 (예: SM-S928N -> 갤럭시 S24 울트라)
+    // 🌟 모델명 펫네임 매핑 (SM-F971 -> 갤럭시 Z 폴드8 등 최신 모델 포함)
     const MODEL_MAP = {
+      'SM-F971': '갤럭시 Z 폴드8',
+      'SM-F968': '갤럭시 Z 폴드 SE',
+      'SM-F956': '갤럭시 Z 폴드6',
+      'SM-F741': '갤럭시 Z 플립6',
+      'SM-F751': '갤럭시 Z 플립7',
+      'SM-F761': '갤럭시 Z 플립8',
+      'SM-S948': '갤럭시 S26 울트라',
+      'SM-S946': '갤럭시 S26+',
+      'SM-S941': '갤럭시 S26',
+      'SM-S938': '갤럭시 S25 울트라',
+      'SM-S936': '갤럭시 S25+',
+      'SM-S931': '갤럭시 S25',
       'SM-S928': '갤럭시 S24 울트라',
       'SM-S926': '갤럭시 S24+',
       'SM-S921': '갤럭시 S24',
@@ -745,11 +768,6 @@
       'SM-G998': '갤럭시 S21 울트라',
       'SM-G996': '갤럭시 S21+',
       'SM-G991': '갤럭시 S21',
-      'SM-G988': '갤럭시 S20 울트라',
-      'SM-G986': '갤럭시 S20+',
-      'SM-G981': '갤럭시 S20',
-      'SM-F956': '갤럭시 Z 폴드6',
-      'SM-F741': '갤럭시 Z 플립6',
       'SM-F946': '갤럭시 Z 폴드5',
       'SM-F731': '갤럭시 Z 플립5',
       'SM-F936': '갤럭시 Z 폴드4',
@@ -766,7 +784,6 @@
       return raw;
     }
 
-    // 🌟 펌웨어 빌드 날짜 정확한 한국어 포맷팅
     function formatBuildDate(raw) {
       if (!raw) return '미기록';
       const m = raw.match(/([A-Za-z]{3})\s+([A-Za-z]{3})\s+(\d+)\s+(\d{1,2}:\d{2}(?::\d{2})?)(?:\s+[A-Za-z0-9_+-]+)?\s+(\d{4})/);
@@ -804,7 +821,7 @@
     function formatOneUi(oneui, android) {
       let result = '';
       if (oneui) {
-        if (/^\d{5,6}$/.test(oneui)) {
+        if (/^\d{4,6}$/.test(oneui)) {
           const n = parseInt(oneui, 10);
           const major = n >= 100000 ? Math.floor(n / 10000) - 9 : Math.floor(n / 10000);
           const minor = Math.floor((n % 10000) / 100);
@@ -838,11 +855,12 @@
         let asoc = null, bsoh = null, cycle = null;
         let designCap = null, maxCap = null, batMfg = null, batTemp = null;
         let ufsA = null, ufsB = null, preEol = null;
-        let model = null, soc = null, androidVer = null, oneuiVer = null;
+        let model = null;
+        let socModel = null, socChip = null, socPlatform = null;
+        let androidVer = null, oneuiVer = null;
         let buildDate = null, buildId = null;
         let bootReason = null, uptime = null;
 
-        // 배터리 수명 & 사이클
         const regexAsoc = /(?:mSavedBatteryAsoc|\/efs\/FactoryApp\/asoc)\s*[:=,]\s*\[?(\d+)\]?/i;
         const regexBsoh = /(?:mSavedBatteryBsoh|\/efs\/FactoryApp\/bsoh|Unbiased BSOH|BSOH)\s*[:=,]\s*\[?(\d+(?:\.\d+)?)\]?/i;
         const regexUsage = /(?:mSavedBatteryUsage|mSavedBatteryUsages|BatteryUsage)\s*[:=,]\s*\[?(\d+)\]?/i;
@@ -850,28 +868,27 @@
         const regexLlbCal = /(?:LLB CAL|LLB MAN|Battery first use date)\s*[:=]\s*\[?(\d{8})\]?/i;
         const regexTemp = /(?:mSavedBatteryMaxTemp)\s*[:=,]\s*\[?(\d+)\]?/i;
 
-        // 🌟 배터리 설계 용량 (초기 스펙)
         const regexDesignCap = /(?:mSavedBatteryInitialCapacity|charge_full_design|batt_capacity_max|design_capacity|mDesignCapacity)\s*[:=,]\s*\[?(\d+)\]?/i;
-        // 🌟 배터리 현재 최대 완충 용량
         const regexMaxCap = /(?:mSavedBatteryMaxCapacity|charge_full|fg_fullcapnom|full_capacity)\s*[:=,]\s*\[?(\d+)\]?/i;
 
-        // UFS 저장장치
         const regexUfsA = /(?:Device life time estimation type A|bDeviceLifeTimeEstA|life_time_estimation_a|life_time_a|Storage Life Time A)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
         const regexUfsB = /(?:Device life time estimation type B|bDeviceLifeTimeEstB|life_time_estimation_b|life_time_b|Storage Life Time B)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
         const regexPreEol = /(?:Pre-EOL info|bPreEOLInfo|eol_info|Pre EOL)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
 
-        // 기기 & 프로세서 (AP)
         const regexModel = /\[ro\.product\.model\]:\s*\[(.*?)\]/i;
-        const regexSocProp = /\[?(?:ro\.soc\.model\vert{}ro\.chipname\vert{}ro\.hardware\.chipname\vert{}ro\.board\.platform\vert{}ro\.product\.board)\]?[\s:=]+\[?([A-Za-z0-9_-]+)\]?/i;
-        const regexCpuHardware = /Hardware\s*:\s*([^\r\n]+)/i;
 
-        // 펌웨어 & 빌드
+        // 🌟 칩셋 우선순위 정규식: 공식 시스템 프로퍼티 키값만 엄격히 타겟팅
+        const regexSocModel = /\[ro\.soc\.model\]:\s*\[(.*?)\]/i;
+        const regexSocChip = /\[(?:ro\.chipname\vert{}ro\.hardware\.chipname)\]:\s*\[(.*?)\]/i;
+        const regexSocPlatform = /\[(?:ro\.board\.platform\vert{}ro\.product\.board)\]:\s*\[(.*?)\]/i;
+
         const regexAndroid = /\[ro\.build\.version\.release\]:\s*\[(.*?)\]/i;
-        const regexOneui = /\[(?:ro\.build\.version\.oneui\vert{}ro\.build\.version\.sep)\]:\s*\[(.*?)\]/i;
-        const regexBuildId = /\[(?:ro\.build\.version\.incremental\vert{}ro\.build\.display\.id)\]:\s*\[(.*?)\]/i;
+        const regexOneui = /\[?(?:ro\.build\.version\.oneui(?:\.version)?\vert{}ro\.build\.version\.sep\vert{}ro\.build\.version\.sem)\]?[\s:=]+\[?([A-Za-z0-9_.-]+)\]?/i;
+        
+        // 🌟 삼성 PDA 및 빌드 번호 포괄 정규식
+        const regexBuildId = /\[?(?:ro\.build\.PDA\vert{}ro\.boot\.bootloader\vert{}ro\.bootloader\vert{}ro\.build\.display\.id\vert{}ro\.build\.version\.incremental)\]?[\s:=]+\[?([A-Za-z0-9_.-]+)\]?/i;
         const regexBuildDate = /\[ro\.build\.date\]:\s*\[(.*?)\]/i;
 
-        // 시스템 상태
         const regexBoot = /(?:\[sys\.boot\.reason\]:\s*\[(.*?)\]|Last reset reason\s*[:=]\s*(.*)|Reset Reason\s*[:=]\s*(.*))/i;
         const regexUp = /uptime:\s*(.*)/i;
 
@@ -895,7 +912,6 @@
               }
             }
 
-            // 배터리 용량 파싱 (uAh 단위인 5000000 등은 1000으로 나누어 mAh 변환)
             if (!designCap && regexDesignCap.test(line)) {
               let val = parseInt(line.match(regexDesignCap)[1], 10);
               if (val > 100000) val = Math.round(val / 1000);
@@ -916,13 +932,18 @@
 
             if (!model && regexModel.test(line)) model = line.match(regexModel)[1];
             
-            // 프로세서 정보 (ro.soc... 또는 /proc/cpuinfo Hardware)
-            if (!soc) {
-              if (regexSocProp.test(line)) {
-                soc = line.match(regexSocProp)[1];
-              } else if (regexCpuHardware.test(line)) {
-                soc = line.match(regexCpuHardware)[1].trim();
-              }
+            // 🌟 프로세서 우선순위 수집 & 검증 필터 통과한 경우만 채택
+            if (!socModel && regexSocModel.test(line)) {
+              const cand = line.match(regexSocModel)[1];
+              if (isValidSoc(cand)) socModel = cand;
+            }
+            if (!socChip && regexSocChip.test(line)) {
+              const cand = line.match(regexSocChip)[1];
+              if (isValidSoc(cand)) socChip = cand;
+            }
+            if (!socPlatform && regexSocPlatform.test(line)) {
+              const cand = line.match(regexSocPlatform)[1];
+              if (isValidSoc(cand)) socPlatform = cand;
             }
 
             if (!androidVer && regexAndroid.test(line)) androidVer = line.match(regexAndroid)[1];
@@ -938,7 +959,9 @@
           }
         }
 
-        // 수명 값 결정
+        // 🌟 최종 칩셋: ro.soc.model > ro.chipname > ro.board.platform 순으로 결정
+        const finalSoc = socModel || socChip || socPlatform;
+
         let finalDisplayHealth = null;
         if (bsoh) {
           finalDisplayHealth = parseFloat(bsoh).toFixed(0);
@@ -965,7 +988,6 @@
 
         cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
 
-        // 🌟 배터리 상세 지표 바인딩
         repBsoh.textContent = bsoh ? `${parseFloat(bsoh).toFixed(1)}%` : '미기록';
         repAsoc.textContent = asoc ? `${asoc}%` : '미기록';
         repBatDesignCap.textContent = designCap ? `${designCap.toLocaleString()} mAh` : '미기록';
@@ -984,7 +1006,6 @@
           repBatTemp.textContent = '미기록';
         }
 
-        // UFS 수명 지표
         repUfsA.textContent = parseUfsLife(ufsA);
         repUfsB.textContent = parseUfsLife(ufsB);
         if (preEol) {
@@ -1000,14 +1021,12 @@
           ufsNote.style.display = 'none';
         }
 
-        // 🌟 기기 및 펌웨어 사양 바인딩
         repModel.textContent = formatModelName(model);
-        repSoc.textContent = formatSocName(soc);
+        repSoc.textContent = formatSocName(finalSoc);
         repOsVer.textContent = formatOneUi(oneuiVer, androidVer);
         repBuildId.textContent = buildId || '미기록';
         repBuildDate.textContent = formatBuildDate(buildDate);
 
-        // 시스템 상태
         repBootReason.textContent = bootReason || '정상 종료 (Normal)';
         repUptime.textContent = uptime || '기록 없음';
 
@@ -1023,3 +1042,4 @@
   </script>
 </body>
 </html>
+
