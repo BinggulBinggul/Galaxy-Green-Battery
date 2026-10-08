@@ -279,6 +279,8 @@
       font-weight: 700;
       color: var(--oneui-text-main);
       text-align: right;
+      max-width: 65%;
+      word-break: break-all;
     }
 
     .step-list {
@@ -382,7 +384,7 @@
 
     <div class="oneui-card" style="padding: 16px 20px;">
       <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        💡 <b>파일 선택 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 용량이 수십 MB 이상인 <b>메인 파일(<code>dumpState_[기종명]...log</code>)</b>을 선택해야 가장 많은 정보가 분석됩니다.
+        💡 <b>파일 선택 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 용량이 가장 큰 <b>메인 덤프 파일(<code>dumpState_[기종명]...log</code>)</b>을 선택해야 모든 수치가 정상 추출됩니다.
       </div>
     </div>
   </div>
@@ -408,7 +410,7 @@
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
       <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">기기 종합 진단 리포트</h3>
-      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 추출한 하드웨어 상세 정보입니다.</p>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 정밀 추출한 하드웨어 상세 정보입니다.</p>
 
       <!-- 1. 배터리 정밀 진단 -->
       <div class="report-section">
@@ -422,12 +424,16 @@
           <span class="report-val" id="repAsoc">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">배터리 제조/조립일 (LLB)</span>
-          <span class="report-val" id="repBatMfg">--</span>
+          <span class="report-label">배터리 설계 용량 (초기)</span>
+          <span class="report-val" id="repBatDesignCap">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">배터리 설계/최대 용량</span>
-          <span class="report-val" id="repBatCap">--</span>
+          <span class="report-label">현재 최대 충전 가능 용량</span>
+          <span class="report-val" id="repBatMaxCap">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">배터리 제조/조립일 (LLB)</span>
+          <span class="report-val" id="repBatMfg">--</span>
         </div>
         <div class="report-row">
           <span class="report-label">역대 최고 기록 온도</span>
@@ -455,7 +461,7 @@
         </div>
       </div>
 
-      <!-- 3. 기기 사양 -->
+      <!-- 3. 기기 및 펌웨어 사양 -->
       <div class="report-section">
         <div class="report-title">📱 기기 및 펌웨어 사양</div>
         <div class="report-row">
@@ -464,14 +470,18 @@
         </div>
         <div class="report-row">
           <span class="report-label">프로세서 (AP/Chip)</span>
-          <span class="report-val" id="repSoc">--</span>
+          <span class="report-val" id="repSoc" style="color: var(--oneui-green-dark);">--</span>
         </div>
         <div class="report-row">
           <span class="report-label">운영체제 버전</span>
           <span class="report-val" id="repOsVer">--</span>
         </div>
         <div class="report-row">
-          <span class="report-label">펌웨어 빌드 일자</span>
+          <span class="report-label">펌웨어 빌드 번호 (PDA)</span>
+          <span class="report-val" id="repBuildId">--</span>
+        </div>
+        <div class="report-row">
+          <span class="report-label">펌웨어 빌드 일시</span>
           <span class="report-val" id="repBuildDate">--</span>
         </div>
       </div>
@@ -624,8 +634,9 @@
 
     const repBsoh = document.getElementById('repBsoh');
     const repAsoc = document.getElementById('repAsoc');
+    const repBatDesignCap = document.getElementById('repBatDesignCap');
+    const repBatMaxCap = document.getElementById('repBatMaxCap');
     const repBatMfg = document.getElementById('repBatMfg');
-    const repBatCap = document.getElementById('repBatCap');
     const repBatTemp = document.getElementById('repBatTemp');
     const repUfsA = document.getElementById('repUfsA');
     const repUfsB = document.getElementById('repUfsB');
@@ -634,6 +645,7 @@
     const repModel = document.getElementById('repModel');
     const repSoc = document.getElementById('repSoc');
     const repOsVer = document.getElementById('repOsVer');
+    const repBuildId = document.getElementById('repBuildId');
     const repBuildDate = document.getElementById('repBuildDate');
     const repBootReason = document.getElementById('repBootReason');
     const repUptime = document.getElementById('repUptime');
@@ -669,6 +681,113 @@
       }
     });
 
+    // 🌟 프로세서 친숙한 이름 변환 딕셔너리
+    const SOC_MAP = {
+      'SM8750': '스냅드래곤 8 Elite (SM8750)',
+      'SUN': '스냅드래곤 8 Elite',
+      'SM8650': '스냅드래곤 8 Gen 3 for Galaxy (SM8650)',
+      'PINEAPPLE': '스냅드래곤 8 Gen 3 for Galaxy',
+      'SM8550': '스냅드래곤 8 Gen 2 for Galaxy (SM8550)',
+      'KALAMA': '스냅드래곤 8 Gen 2 for Galaxy',
+      'SM8450': '스냅드래곤 8 Gen 1 (SM8450)',
+      'TARO': '스냅드래곤 8 Gen 1',
+      'SM8475': '스냅드래곤 8+ Gen 1 (SM8475)',
+      'CAPE': '스냅드래곤 8+ Gen 1',
+      'SM8350': '스냅드래곤 888 (SM8350)',
+      'LAHAINA': '스냅드래곤 888',
+      'SM8250': '스냅드래곤 865 (SM8250)',
+      'KONA': '스냅드래곤 865',
+      'SM8150': '스냅드래곤 855 (SM8150)',
+      'MSMNILE': '스냅드래곤 855',
+      'SDM845': '스냅드래곤 845',
+      'SM7475': '스냅드래곤 7+ Gen 2',
+      'SM7450': '스냅드래곤 7 Gen 1',
+      'SM7325': '스냅드래곤 778G',
+      'EXYNOS2400': '엑시노스 2400',
+      'S5E9945': '엑시노스 2400 (S5E9945)',
+      'EXYNOS2200': '엑시노스 2200',
+      'S5E9925': '엑시노스 2200 (S5E9925)',
+      'EXYNOS2100': '엑시노스 2100',
+      'S5E9840': '엑시노스 2100 (S5E9840)',
+      'EXYNOS990': '엑시노스 990',
+      'UNIVERSAL9830': '엑시노스 990',
+      'EXYNOS9820': '엑시노스 9820',
+      'UNIVERSAL9820': '엑시노스 9820',
+      'EXYNOS1480': '엑시노스 1480 (S5E8845)',
+      'S5E8845': '엑시노스 1480',
+      'EXYNOS1380': '엑시노스 1380 (S5E8835)',
+      'S5E8835': '엑시노스 1380',
+      'EXYNOS1280': '엑시노스 1280 (S5E8825)',
+      'S5E8825': '엑시노스 1280'
+    };
+
+    function formatSocName(raw) {
+      if (!raw) return '미기록';
+      const clean = raw.toUpperCase().trim();
+      if (SOC_MAP[clean]) return SOC_MAP[clean];
+      for (const [k, v] of Object.entries(SOC_MAP)) {
+        if (clean.includes(k)) return v;
+      }
+      return raw;
+    }
+
+    // 🌟 모델명 펫네임 매핑 (예: SM-S928N -> 갤럭시 S24 울트라)
+    const MODEL_MAP = {
+      'SM-S928': '갤럭시 S24 울트라',
+      'SM-S926': '갤럭시 S24+',
+      'SM-S921': '갤럭시 S24',
+      'SM-S918': '갤럭시 S23 울트라',
+      'SM-S916': '갤럭시 S23+',
+      'SM-S911': '갤럭시 S23',
+      'SM-S908': '갤럭시 S22 울트라',
+      'SM-S906': '갤럭시 S22+',
+      'SM-S901': '갤럭시 S22',
+      'SM-G998': '갤럭시 S21 울트라',
+      'SM-G996': '갤럭시 S21+',
+      'SM-G991': '갤럭시 S21',
+      'SM-G988': '갤럭시 S20 울트라',
+      'SM-G986': '갤럭시 S20+',
+      'SM-G981': '갤럭시 S20',
+      'SM-F956': '갤럭시 Z 폴드6',
+      'SM-F741': '갤럭시 Z 플립6',
+      'SM-F946': '갤럭시 Z 폴드5',
+      'SM-F731': '갤럭시 Z 플립5',
+      'SM-F936': '갤럭시 Z 폴드4',
+      'SM-F721': '갤럭시 Z 플립4',
+      'SM-N986': '갤럭시 노트20 울트라',
+      'SM-N981': '갤럭시 노트20'
+    };
+
+    function formatModelName(raw) {
+      if (!raw) return '미기록';
+      for (const [k, v] of Object.entries(MODEL_MAP)) {
+        if (raw.includes(k)) return `${raw} (${v})`;
+      }
+      return raw;
+    }
+
+    // 🌟 펌웨어 빌드 날짜 정확한 한국어 포맷팅
+    function formatBuildDate(raw) {
+      if (!raw) return '미기록';
+      const m = raw.match(/([A-Za-z]{3})\s+([A-Za-z]{3})\s+(\d+)\s+(\d{1,2}:\d{2}(?::\d{2})?)(?:\s+[A-Za-z0-9_+-]+)?\s+(\d{4})/);
+      if (m) {
+        const months = {
+          Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06',
+          Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'
+        };
+        const mon = months[m[2]] || m[2];
+        const day = m[3].padStart(2, '0');
+        const time = m[4];
+        const year = m[5];
+        return `${year}년 ${mon}월 ${day}일 ${time}`;
+      }
+      const iso = raw.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:\s+(\d{1,2}:\d{2}(?::\d{2})?))?/);
+      if (iso) {
+        return `${iso[1]}년 ${iso[2].padStart(2, '0')}월 ${iso[3].padStart(2, '0')}일 ${iso[4] || ''}`.trim();
+      }
+      return raw;
+    }
+
     function parseUfsLife(val) {
       if (!val) return '미기록 (기종 제한)';
       const num = parseInt(val, 16);
@@ -700,13 +819,13 @@
       return result || '정보 없음';
     }
 
-    // 🌟 확장 정규표현식 파서
+    // 🌟 대용량 덤프 정밀 스트리밍 파서
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       summaryText.textContent = `${file.name} 분석 중...`;
-      statusDetail.textContent = '메인 BMS 데이터 및 하드웨어 로그를 정밀 탐색하고 있습니다...';
+      statusDetail.textContent = '메인 BMS 데이터 및 하드웨어 스펙을 정밀 탐색하고 있습니다...';
       healthVal.textContent = '...';
       cycleVal.textContent = '...';
       btnOpenExtraInfo.disabled = true;
@@ -717,29 +836,42 @@
         let remainder = '';
 
         let asoc = null, bsoh = null, cycle = null;
-        let batCap = null, batMfg = null, batTemp = null;
+        let designCap = null, maxCap = null, batMfg = null, batTemp = null;
         let ufsA = null, ufsB = null, preEol = null;
-        let model = null, soc = null, androidVer = null, oneuiVer = null, buildDate = null;
+        let model = null, soc = null, androidVer = null, oneuiVer = null;
+        let buildDate = null, buildId = null;
         let bootReason = null, uptime = null;
 
+        // 배터리 수명 & 사이클
         const regexAsoc = /(?:mSavedBatteryAsoc|\/efs\/FactoryApp\/asoc)\s*[:=,]\s*\[?(\d+)\]?/i;
         const regexBsoh = /(?:mSavedBatteryBsoh|\/efs\/FactoryApp\/bsoh|Unbiased BSOH|BSOH)\s*[:=,]\s*\[?(\d+(?:\.\d+)?)\]?/i;
         const regexUsage = /(?:mSavedBatteryUsage|mSavedBatteryUsages|BatteryUsage)\s*[:=,]\s*\[?(\d+)\]?/i;
         const regexCycleFunc = /Cycle\((\d+)/i;
         const regexLlbCal = /(?:LLB CAL|LLB MAN|Battery first use date)\s*[:=]\s*\[?(\d{8})\]?/i;
-        const regexCap = /(?:mSavedBatteryMaxCapacity|fg_fullcapnom|batt_capacity_max)\s*[:=,]\s*\[?(\d+)\]?/i;
         const regexTemp = /(?:mSavedBatteryMaxTemp)\s*[:=,]\s*\[?(\d+)\]?/i;
 
-        // UFS/eMMC 정밀 포괄 정규표현식
+        // 🌟 배터리 설계 용량 (초기 스펙)
+        const regexDesignCap = /(?:mSavedBatteryInitialCapacity|charge_full_design|batt_capacity_max|design_capacity|mDesignCapacity)\s*[:=,]\s*\[?(\d+)\]?/i;
+        // 🌟 배터리 현재 최대 완충 용량
+        const regexMaxCap = /(?:mSavedBatteryMaxCapacity|charge_full|fg_fullcapnom|full_capacity)\s*[:=,]\s*\[?(\d+)\]?/i;
+
+        // UFS 저장장치
         const regexUfsA = /(?:Device life time estimation type A|bDeviceLifeTimeEstA|life_time_estimation_a|life_time_a|Storage Life Time A)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
         const regexUfsB = /(?:Device life time estimation type B|bDeviceLifeTimeEstB|life_time_estimation_b|life_time_b|Storage Life Time B)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
         const regexPreEol = /(?:Pre-EOL info|bPreEOLInfo|eol_info|Pre EOL)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
 
+        // 기기 & 프로세서 (AP)
         const regexModel = /\[ro\.product\.model\]:\s*\[(.*?)\]/i;
-        const regexSoc = /\[(?:ro\.soc\.model\vert{}ro\.chipname\vert{}ro\.board\.platform)\]:\s*\[(.*?)\]/i;
+        const regexSocProp = /\[?(?:ro\.soc\.model\vert{}ro\.chipname\vert{}ro\.hardware\.chipname\vert{}ro\.board\.platform\vert{}ro\.product\.board)\]?[\s:=]+\[?([A-Za-z0-9_-]+)\]?/i;
+        const regexCpuHardware = /Hardware\s*:\s*([^\r\n]+)/i;
+
+        // 펌웨어 & 빌드
         const regexAndroid = /\[ro\.build\.version\.release\]:\s*\[(.*?)\]/i;
         const regexOneui = /\[(?:ro\.build\.version\.oneui\vert{}ro\.build\.version\.sep)\]:\s*\[(.*?)\]/i;
+        const regexBuildId = /\[(?:ro\.build\.version\.incremental\vert{}ro\.build\.display\.id)\]:\s*\[(.*?)\]/i;
         const regexBuildDate = /\[ro\.build\.date\]:\s*\[(.*?)\]/i;
+
+        // 시스템 상태
         const regexBoot = /(?:\[sys\.boot\.reason\]:\s*\[(.*?)\]|Last reset reason\s*[:=]\s*(.*)|Reset Reason\s*[:=]\s*(.*))/i;
         const regexUp = /uptime:\s*(.*)/i;
 
@@ -763,20 +895,41 @@
               }
             }
 
+            // 배터리 용량 파싱 (uAh 단위인 5000000 등은 1000으로 나누어 mAh 변환)
+            if (!designCap && regexDesignCap.test(line)) {
+              let val = parseInt(line.match(regexDesignCap)[1], 10);
+              if (val > 100000) val = Math.round(val / 1000);
+              designCap = val;
+            }
+            if (!maxCap && regexMaxCap.test(line)) {
+              let val = parseInt(line.match(regexMaxCap)[1], 10);
+              if (val > 100000) val = Math.round(val / 1000);
+              maxCap = val;
+            }
+
             if (!batMfg && regexLlbCal.test(line)) batMfg = line.match(regexLlbCal)[1];
-            if (!batCap && regexCap.test(line)) batCap = line.match(regexCap)[1];
             if (!batTemp && regexTemp.test(line)) batTemp = line.match(regexTemp)[1];
 
-            // UFS 탐색
             if (!ufsA && regexUfsA.test(line)) ufsA = line.match(regexUfsA)[1];
             if (!ufsB && regexUfsB.test(line)) ufsB = line.match(regexUfsB)[1];
             if (!preEol && regexPreEol.test(line)) preEol = line.match(regexPreEol)[1];
 
             if (!model && regexModel.test(line)) model = line.match(regexModel)[1];
-            if (!soc && regexSoc.test(line)) soc = line.match(regexSoc)[1];
+            
+            // 프로세서 정보 (ro.soc... 또는 /proc/cpuinfo Hardware)
+            if (!soc) {
+              if (regexSocProp.test(line)) {
+                soc = line.match(regexSocProp)[1];
+              } else if (regexCpuHardware.test(line)) {
+                soc = line.match(regexCpuHardware)[1].trim();
+              }
+            }
+
             if (!androidVer && regexAndroid.test(line)) androidVer = line.match(regexAndroid)[1];
             if (!oneuiVer && regexOneui.test(line)) oneuiVer = line.match(regexOneui)[1];
+            if (!buildId && regexBuildId.test(line)) buildId = line.match(regexBuildId)[1];
             if (!buildDate && regexBuildDate.test(line)) buildDate = line.match(regexBuildDate)[1];
+
             if (!bootReason && regexBoot.test(line)) {
               const m = line.match(regexBoot);
               bootReason = m[1] || m[2] || m[3];
@@ -785,10 +938,10 @@
           }
         }
 
+        // 수명 값 결정
         let finalDisplayHealth = null;
         if (bsoh) {
-          const bVal = parseFloat(bsoh);
-          finalDisplayHealth = bVal.toFixed(0);
+          finalDisplayHealth = parseFloat(bsoh).toFixed(0);
         } else if (asoc) {
           finalDisplayHealth = asoc;
         }
@@ -812,14 +965,18 @@
 
         cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
 
+        // 🌟 배터리 상세 지표 바인딩
         repBsoh.textContent = bsoh ? `${parseFloat(bsoh).toFixed(1)}%` : '미기록';
         repAsoc.textContent = asoc ? `${asoc}%` : '미기록';
+        repBatDesignCap.textContent = designCap ? `${designCap.toLocaleString()} mAh` : '미기록';
+        repBatMaxCap.textContent = maxCap ? `${maxCap.toLocaleString()} mAh` : (designCap && finalDisplayHealth ? `${Math.round(designCap * (finalDisplayHealth / 100)).toLocaleString()} mAh (추정치)` : '미기록');
+        
         if (batMfg && /^\d{8}$/.test(batMfg)) {
           repBatMfg.textContent = `${batMfg.substring(0,4)}년 ${batMfg.substring(4,6)}월 ${batMfg.substring(6,8)}일`;
         } else {
           repBatMfg.textContent = batMfg || '미기록';
         }
-        repBatCap.textContent = batCap ? `${batCap} mAh` : '미기록';
+
         if (batTemp) {
           const tNum = parseFloat(batTemp);
           repBatTemp.textContent = tNum > 100 ? `${(tNum/10).toFixed(1)}°C` : `${tNum.toFixed(1)}°C`;
@@ -827,7 +984,7 @@
           repBatTemp.textContent = '미기록';
         }
 
-        // UFS 결과 반영 및 안내문 제어
+        // UFS 수명 지표
         repUfsA.textContent = parseUfsLife(ufsA);
         repUfsB.textContent = parseUfsLife(ufsB);
         if (preEol) {
@@ -837,17 +994,20 @@
           repPreEol.textContent = (ufsA || ufsB) ? '정상 (추정)' : '미기록 (기종 제한)';
         }
 
-        // UFS 데이터가 없는 기종일 경우 안내문 표시
         if (!ufsA && !ufsB && !preEol) {
           ufsNote.style.display = 'block';
         } else {
           ufsNote.style.display = 'none';
         }
 
-        repModel.textContent = model || '미기록';
-        repSoc.textContent = soc ? soc.toUpperCase() : '미기록';
+        // 🌟 기기 및 펌웨어 사양 바인딩
+        repModel.textContent = formatModelName(model);
+        repSoc.textContent = formatSocName(soc);
         repOsVer.textContent = formatOneUi(oneuiVer, androidVer);
-        repBuildDate.textContent = buildDate ? buildDate.split(' ')[0] : '미기록';
+        repBuildId.textContent = buildId || '미기록';
+        repBuildDate.textContent = formatBuildDate(buildDate);
+
+        // 시스템 상태
         repBootReason.textContent = bootReason || '정상 종료 (Normal)';
         repUptime.textContent = uptime || '기록 없음';
 
