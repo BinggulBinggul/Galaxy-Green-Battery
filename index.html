@@ -12,6 +12,7 @@
   <meta name="theme-color" content="#10B981" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Galaxy Green Battery" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
@@ -83,7 +84,7 @@
       font-size: 0.95rem;
     }
 
-    /* 카드 영역 */
+    /* One UI 카드 인터랙션 영역 */
     .interaction-area {
       display: flex;
       flex-direction: column;
@@ -186,7 +187,7 @@
       transform: scale(0.95);
     }
 
-    /* 가이드 바텀 시트 */
+    /* 가이드 바텀 시트 모달 */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -241,13 +242,16 @@
       font-size: 0.85rem;
       font-weight: 700;
       flex-shrink: 0;
+      margin-top: 2px;
     }
     .step-content {
       font-size: 0.92rem;
       line-height: 1.45;
+      flex: 1;
     }
     .action-btn-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin-top: 8px;
     }
@@ -262,19 +266,31 @@
       font-weight: 600;
       background: var(--oneui-bg);
       color: var(--oneui-text-main);
-      border: 1px solid rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(0, 0, 0, 0.08);
       cursor: pointer;
+    }
+    .route-box {
+      margin-top: 6px;
+      padding: 8px 12px;
+      background: var(--oneui-bg);
+      border-radius: 12px;
+      font-size: 0.82rem;
+      color: var(--oneui-text-sub);
+      display: inline-block;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
 
+  <!-- One UI 상단 시각 영역 -->
   <div class="viewing-area">
     <div class="badge">🌿 Galaxy Green Battery</div>
-    <h1>배터리 수명 분석</h1>
-    <p>SysDump 로그의 BMS 원시 수치를 분석합니다.</p>
+    <h1>Galaxy Green Battery</h1>
+    <p>SysDump 로그의 BMS 원시 수치로 실배터리 수명을 분석합니다.</p>
   </div>
 
+  <!-- One UI 카드 인터랙션 영역 -->
   <div class="interaction-area">
     <div class="oneui-card">
       <div style="font-weight: 700; font-size: 1.1rem;">배터리 상태</div>
@@ -295,12 +311,12 @@
 
     <div class="oneui-card" style="padding: 16px 20px;">
       <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        🔒 <b>완전한 오프라인 분석</b>: 파일은 서버로 전송되지 않으며, 스마트폰 웹 브라우저 내부에서만 파싱됩니다.
+        🔒 <b>완전한 오프라인 분석</b>: 파일은 서버로 업로드되지 않으며 스마트폰 브라우저 내부 메모리에서만 파싱되므로 개인정보가 유출되지 않습니다.
       </div>
     </div>
   </div>
 
-  <!-- 플로팅 메뉴 -->
+  <!-- 하단 One UI 플로팅 액션 바 -->
   <div class="floating-bar-container">
     <div class="floating-bar">
       <button class="float-btn secondary" id="btnInstall" style="display: none;">
@@ -317,19 +333,38 @@
 
   <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
 
-  <!-- 가이드 바텀 시트 -->
+  <!-- 가이드 바텀 시트 모달 -->
   <div class="modal-overlay" id="guideModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
-      <h3 style="margin: 0 0 6px 0; font-size: 1.2rem;">로그 추출 4단계 가이드</h3>
-      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">삼성 전화 앱과 내 파일 앱을 이용해 추출합니다.</p>
+      <h3 style="margin: 0 0 6px 0; font-size: 1.25rem;">로그 추출 5단계 가이드</h3>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">정확한 분석을 위해 아래 순서대로 진행해 주세요.</p>
 
       <div class="step-list">
+        <!-- 1단계: 보안 위험 자동 차단 해제 -->
         <div class="step-item">
           <div class="step-num">1</div>
           <div class="step-content">
+            <b>보안 위험 자동 차단 해제 (필수)</b><br>
+            One UI 6.1.1 이상은 켜져 있을 시 <code>*#9900#</code> 코드 진입이 차단됩니다.
+            <div class="action-btn-row">
+              <a href="intent:#Intent;action=android.settings.SECURITY_SETTINGS;end" class="pill-btn" id="btnOpenSecurity">
+                ⚙️ 보안 설정 바로가기
+              </a>
+            </div>
+            <div class="route-box">
+              👉 진입 후 <b>[보안 위험 자동 차단]</b>을 눌러 <b>[사용 안 함]</b>으로 꺼주세요.<br>
+              <small>(링크가 열리지 않는 경우: 스마트폰 <b>설정 ➔ 보안 및 개인정보 보호 ➔ 보안 위험 자동 차단</b>)</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2단계: SysDump 진입 -->
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
             <b>SysDump 코드 실행</b><br>
-            전화 다이얼에서 <code>*#9900#</code>을 입력합니다.
+            기본 전화 다이얼 패드에서 <code>*#9900#</code>을 입력합니다.
             <div class="action-btn-row">
               <a href="tel:*%239900%23" class="pill-btn">📞 전화 다이얼 열기</a>
               <button class="pill-btn" id="btnCopyCode">📋 코드 복사</button>
@@ -337,27 +372,30 @@
           </div>
         </div>
 
-        <div class="step-item">
-          <div class="step-num">2</div>
-          <div class="step-content">
-            <b>로그 생성</b><br>
-            메뉴 최상단의 <b>Run dumpstate/logcat</b>을 누르고 1~2분 뒤 "Dump Result" 팝업이 뜨면 [OK]를 누릅니다.
-          </div>
-        </div>
-
+        <!-- 3단계: 로그 생성 -->
         <div class="step-item">
           <div class="step-num">3</div>
           <div class="step-content">
-            <b>저장공간 복사</b><br>
-            아래쪽의 <b>Copy to sdcard</b>를 누릅니다. (복사 완료 창이 뜰 때까지 대기)
+            <b>로그 생성</b><br>
+            메뉴 맨 위의 <b>Run dumpstate/logcat</b>을 누르고 1~2분 뒤 "Dump Result" 팝업이 뜨면 [OK]를 누릅니다.
           </div>
         </div>
 
+        <!-- 4단계: 내장 메모리 복사 -->
         <div class="step-item">
           <div class="step-num">4</div>
           <div class="step-content">
+            <b>저장공간 복사</b><br>
+            아래쪽의 <b>Copy to sdcard</b>를 누릅니다. (복사 완료 알림이 뜰 때까지 대기)
+          </div>
+        </div>
+
+        <!-- 5단계: 파일 선택 -->
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-content">
             <b>로그 파일 선택</b><br>
-            하단 [파일 선택] 클릭 후 <code>내장 저장공간 > log</code> 폴더의 <code>dumpState_*.log</code>를 선택합니다.
+            하단 [파일 선택] 클릭 후 <code>내장 저장공간 > log</code> 폴더 안의 <code>dumpState_*.log</code>를 선택합니다.
           </div>
         </div>
       </div>
@@ -369,7 +407,7 @@
   </div>
 
   <script>
-    // 서비스 워커 등록 (PWA 앱 설치 가능 조건)
+    // 서비스 워커 등록
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg error:', err));
@@ -419,6 +457,7 @@
       if (e.target === guideModal) guideModal.style.display = 'none';
     });
 
+    // 코드 복사
     btnCopyCode.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText('*#9900#');
@@ -428,7 +467,7 @@
       }
     });
 
-    // 파일 스트리밍 파서
+    // 대용량 파일 스트리밍 파서 (메모리 절약)
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -486,7 +525,7 @@
 
           const hNum = parseInt(finalHealth, 10);
           if (hNum >= 85) {
-            statusDetail.textContent = '✨ 배터리 건강 상태가 매우 양호합니다.';
+            statusDetail.textContent = '✨ 배터리 수명이 매우 건강합니다.';
           } else if (hNum >= 80) {
             statusDetail.textContent = '⚡ 배터리 수명이 정상 작동 범위입니다.';
           } else {
@@ -508,4 +547,3 @@
   </script>
 </body>
 </html>
-
