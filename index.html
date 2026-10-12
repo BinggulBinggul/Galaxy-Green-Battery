@@ -136,7 +136,7 @@
       bottom: 24px;
       left: 0;
       right: 0;
-      display: flex;
+      display: none; /* 설치 가능할 때만 JS로 flex 변환 */
       justify-content: center;
       padding: 0 16px;
       z-index: 100;
@@ -161,19 +161,15 @@
     .float-btn {
       border: none;
       outline: none;
-      padding: 12px 18px;
+      padding: 12px 20px;
       border-radius: 999px;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       transition: all 0.2s;
-    }
-    .float-btn.secondary {
-      background: transparent;
-      color: var(--oneui-text-main);
     }
     .float-btn.primary {
       background: var(--oneui-green);
@@ -361,7 +357,7 @@
   </div>
 
   <div class="interaction-area">
-    <!-- 메인 배터리 카드 -->
+    <!-- 1. 메인 배터리 상태 카드 -->
     <div class="oneui-card">
       <div id="cardDeviceTag" style="font-size: 0.8rem; font-weight: 700; color: var(--oneui-green); margin-bottom: 2px;">GALAXY DEVICE</div>
       <div style="font-weight: 700; font-size: 1.15rem;">배터리 상태</div>
@@ -377,22 +373,38 @@
           <div id="cycleVal" class="stat-value">--회</div>
         </div>
       </div>
-      <div id="statusDetail" class="status-msg">하단 플로팅 메뉴 또는 갤럭시 북 메뉴에서 파일을 선택하세요.</div>
+      <div id="statusDetail" class="status-msg">아래 메뉴에서 진단할 기기의 파일을 선택하세요.</div>
 
       <button class="pill-btn primary-pill" id="btnOpenExtraInfo" style="width: 100%; justify-content: center; margin-top: 18px; padding: 13px; font-size: 0.94rem;" disabled>
         🔍 추가정보 확인하기 (기기·용량·배터리 상세)
       </button>
     </div>
 
-    <!-- 파일 선택 팁 카드 -->
-    <div class="oneui-card" style="padding: 16px 20px;">
-      <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        💡 <b>스마트폰 덤프 파일 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 용량이 가장 큰 <b>메인 파일(<code>dumpState_[기종명]...log</code>)</b>을 선택해야 모든 수치가 추출됩니다.
+    <!-- 2. 📱 스마트폰 파일 업로드 카드 (위로 이동) -->
+    <div class="oneui-card" style="padding: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 1.15rem;">📱</span>
+            <span style="font-weight: 800; font-size: 1.05rem;">스마트폰 배터리 진단</span>
+          </div>
+          <div style="font-size: 0.83rem; color: var(--oneui-text-sub); margin-top: 3px;">
+            SysDump 로그 파일(.log) 분석
+          </div>
+        </div>
+        <button class="pill-btn primary-pill" id="btnOpenGuide" style="padding: 8px 14px; font-size: 0.84rem;">
+          📖 폰 추출 가이드
+        </button>
       </div>
+
+      <button class="pill-btn" id="btnUploadTrigger" style="width: 100%; justify-content: center; margin-top: 14px; background: var(--oneui-bg); font-weight: 700; padding: 12px; border: 1.5px solid var(--oneui-green); color: var(--oneui-green-dark);">
+        📂 폰 로그 파일 선택 (.log)
+      </button>
+      <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
     </div>
 
-    <!-- 🌟 갤럭시 북 (노트북) 전용 독립 메뉴 카드 (파일 선택 팁 바로 밑) -->
-    <div class="oneui-card" style="border: 2px dashed rgba(16, 185, 129, 0.35); padding: 22px;">
+    <!-- 3. 💻 갤럭시 북 파일 업로드 카드 (중간 유지) -->
+    <div class="oneui-card" style="padding: 22px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -400,46 +412,44 @@
             <span style="font-weight: 800; font-size: 1.05rem;">갤럭시 북 배터리 진단</span>
           </div>
           <div style="font-size: 0.83rem; color: var(--oneui-text-sub); margin-top: 3px;">
-            Windows 정밀 배터리 보고서(HTML) 분석
+            Windows 배터리 보고서(HTML) 분석
           </div>
         </div>
         <button class="pill-btn primary-pill" id="btnBookGuide" style="padding: 8px 14px; font-size: 0.84rem;">
-          📖 추출 & 가이드
+          📖 북 추출 가이드
         </button>
       </div>
 
-      <button class="pill-btn" id="btnBookUploadTrigger" style="width: 100%; justify-content: center; margin-top: 14px; background: var(--oneui-bg); font-weight: 700; padding: 12px;">
-        📄 battery-report.html 파일 선택
+      <button class="pill-btn" id="btnBookUploadTrigger" style="width: 100%; justify-content: center; margin-top: 14px; background: var(--oneui-bg); font-weight: 700; padding: 12px; border: 1.5px solid var(--oneui-green); color: var(--oneui-green-dark);">
+        📄 battery-report.html 선택
       </button>
       <input type="file" id="bookFileInput" accept=".html,.htm" style="display: none;" />
     </div>
+
+    <!-- 4. 파일 선택 팁 카드 (맨 아래로 이동) -->
+    <div class="oneui-card" style="padding: 16px 20px;">
+      <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
+        💡 <b>스마트폰 파일 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 용량이 가장 큰 <b><code>dumpState_[기종명]...log</code> 메인 덤프 파일</b>을 선택해야 모든 수치가 정상 추출됩니다.
+      </div>
+    </div>
   </div>
 
-  <!-- 하단 스마트폰 전용 플로팅 바 -->
-  <div class="floating-bar-container">
+  <!-- 🌟 스마트 앱 설치 플로팅 바 (앱 미설치 시에만 등장) -->
+  <div class="floating-bar-container" id="floatingBarContainer">
     <div class="floating-bar">
-      <button class="float-btn secondary" id="btnInstall" style="display: none;">
-        📲 앱 설치
-      </button>
-      <button class="float-btn secondary" id="btnOpenGuide">
-        📖 폰 가이드
-      </button>
-      <button class="float-btn primary" id="btnUploadTrigger">
-        📂 폰 로그 선택
+      <button class="float-btn primary" id="btnInstall">
+        📲 홈 화면에 앱 설치
       </button>
     </div>
   </div>
 
-  <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
-
-  <!-- 🌟 갤럭시 북 가이드 & 1초 자동 추출 모달 -->
+  <!-- 💻 갤럭시 북 가이드 & 1초 자동 추출 모달 -->
   <div class="modal-overlay" id="bookGuideModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
       <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">갤럭시 북 배터리 보고서 추출</h3>
       <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">Windows 정밀 배터리 진단 보고서를 1초 만에 추출하는 2가지 방법입니다.</p>
 
-      <!-- 방법 1: 1초 자동 추출 배치 파일 -->
       <div class="guide-tip-box" style="border: 1.5px solid var(--oneui-green); background: var(--oneui-green-light);">
         <b style="color: var(--oneui-green-dark); font-size: 0.95rem;">⚡ 가장 쉬운 1초 방법 (추천)</b>
         <div style="margin-top: 6px; font-size: 0.88rem; color: var(--oneui-text-main); line-height: 1.5;">
@@ -452,7 +462,6 @@
         </div>
       </div>
 
-      <!-- 방법 2: 명령어 직접 실행 -->
       <div class="guide-tip-box" style="margin-top: 14px;">
         <b style="font-size: 0.92rem;">⌨️ 직접 명령어로 추출하기</b>
         <div style="margin-top: 6px; font-size: 0.86rem; color: var(--oneui-text-sub); line-height: 1.5;">
@@ -472,12 +481,12 @@
     </div>
   </div>
 
-  <!-- 추가정보 바텀시트 모달 -->
+  <!-- 추가정보 바텀시트 모달 (공용) -->
   <div class="modal-overlay" id="extraInfoModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
       <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">기기 종합 진단 리포트</h3>
-      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">로그에서 정밀 추출한 하드웨어 상세 정보입니다.</p>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">분석 파일에서 정밀 추출한 하드웨어 상세 정보입니다.</p>
 
       <!-- 1. 배터리 정밀 진단 -->
       <div class="report-section">
@@ -556,7 +565,7 @@
         </div>
       </div>
 
-      <!-- 4. 시스템 가동 이력 -->
+      <!-- 4. 시스템 가동 이력 (스마트폰 전용) -->
       <div class="report-section" id="sectionSystem">
         <div class="report-title">⏱️ 시스템 가동 상태</div>
         <div class="report-row">
@@ -664,13 +673,15 @@
       });
     }
 
+    // 🌟 앱 설치 플로팅 메뉴 제어 로직
     let deferredPrompt = null;
     const btnInstall = document.getElementById('btnInstall');
+    const floatingBarContainer = document.getElementById('floatingBarContainer');
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      btnInstall.style.display = 'inline-flex';
+      floatingBarContainer.style.display = 'flex'; // 앱이 설치 가능할 때만 플로팅 메뉴 노출
     });
 
     btnInstall.addEventListener('click', async () => {
@@ -678,7 +689,7 @@
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-          btnInstall.style.display = 'none';
+          floatingBarContainer.style.display = 'none'; // 설치 완료 시 플로팅 바 즉시 숨김
         }
         deferredPrompt = null;
       }
@@ -691,7 +702,7 @@
     const btnCloseGuide = document.getElementById('btnCloseGuide');
     const guideModal = document.getElementById('guideModal');
 
-    // 갤럭시 북 전용 엘리먼트
+    // 갤럭시 북 엘리먼트
     const bookFileInput = document.getElementById('bookFileInput');
     const btnBookUploadTrigger = document.getElementById('btnBookUploadTrigger');
     const btnBookGuide = document.getElementById('btnBookGuide');
@@ -748,7 +759,7 @@
     let currentFinalDesignCap = 0;
     let currentCapUnit = 'mAh';
 
-    // 스마트폰 트리거 & 모달
+    // 스마트폰 UI 트리거
     btnUploadTrigger.addEventListener('click', () => fileInput.click());
     btnOpenGuide.addEventListener('click', () => guideModal.style.display = 'flex');
     btnCloseGuide.addEventListener('click', () => guideModal.style.display = 'none');
@@ -756,7 +767,7 @@
       if (e.target === guideModal) guideModal.style.display = 'none';
     });
 
-    // 갤럭시 북 트리거 & 모달
+    // 갤럭시 북 UI 트리거
     btnBookUploadTrigger.addEventListener('click', () => bookFileInput.click());
     btnBookGuide.addEventListener('click', () => bookGuideModal.style.display = 'flex');
     btnCloseBookGuide.addEventListener('click', () => bookGuideModal.style.display = 'none');
@@ -770,22 +781,9 @@
       if (e.target === extraInfoModal) extraInfoModal.style.display = 'none';
     });
 
-    // 🌟 갤럭시 북 1초 자동 추출기 (.bat) 생성 및 다운로드
+    // 갤럭시 북 자동 추출기 (.bat) 생성 다운로드
     btnDownloadBatScript.addEventListener('click', () => {
-      const batScript = `@echo off
-chcp 65001 >nul
-title 갤럭시 북 배터리 보고서 생성기
-echo ========================================================
-echo   [Galaxy Green Battery] 배터리 보고서를 생성하고 있습니다...
-echo ========================================================
-echo.
-powercfg /batteryreport /output "%USERPROFILE%\\Desktop\\battery-report.html"
-echo.
-echo [성공] 바탕화면에 'battery-report.html' 파일이 생성되었습니다!
-echo 웹앱 화면으로 돌아가 [battery-report.html 파일 선택]을 누르세요.
-echo.
-pause
-`;
+      const batScript = `@echo off\nchcp 65001 >nul\ntitle 갤럭시 북 배터리 보고서 생성기\necho ========================================================\necho   [Galaxy Green Battery] 배터리 보고서를 생성하고 있습니다...\necho ========================================================\necho.\npowercfg /batteryreport /output "%USERPROFILE%\\Desktop\\battery-report.html"\necho.\necho [성공] 바탕화면에 'battery-report.html' 파일이 생성되었습니다!\necho 웹앱 화면으로 돌아가 [battery-report.html 파일 선택]을 누르세요.\necho.\npause\n`;
       const blob = new Blob([batScript], { type: 'application/x-bat' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -798,7 +796,6 @@ pause
       showToast("📥 'GalaxyBook_Battery_Report.bat' 다운로드 완료! 실행하세요.");
     });
 
-    // 갤럭시 북 명령어 복사
     btnCopyBookCmd.addEventListener('click', async () => {
       const cmd = 'powercfg /batteryreport /output "%USERPROFILE%\\Desktop\\battery-report.html"';
       try {
@@ -841,7 +838,7 @@ pause
       }
     });
 
-    // 🌟 갤럭시 북 Battery Report HTML 파서
+    // 💻 갤럭시 북 파서
     bookFileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -907,7 +904,7 @@ pause
           statusDetail.textContent = '⚠️ 배터리 교체를 권장합니다 (80% 미만).';
         }
 
-        // 노트북 UI 전용 모달 바인딩 (모바일 전용 행 숨김)
+        // 노트북 UI 전용 모달 바인딩 (불필요한 폰 기능 숨김)
         rowBsoh.style.display = 'none';
         rowAsoc.style.display = 'none';
         rowBatMfg.style.display = 'none';
@@ -935,7 +932,7 @@ pause
       }
     });
 
-    // 🌟 스마트폰 SysDump 파서 로직
+    // 📱 스마트폰 파서 공통 데이터
     const SOC_MAP = {
       'SM8750': '스냅드래곤 8 Elite (SM8750)',
       'SUN': '스냅드래곤 8 Elite',
@@ -1269,7 +1266,7 @@ pause
         repBatMaxCap.textContent = `${maxCap.toLocaleString()} mAh (${(currentCalculatedHealthRate * 100).toFixed(1)}%)`;
         btnEditCap.style.display = 'inline-block';
 
-        // 스마트폰 모달 행 복구
+        // 스마트폰 모달 UI 복구
         rowBsoh.style.display = 'flex';
         rowAsoc.style.display = 'flex';
         rowBatMfg.style.display = 'flex';
