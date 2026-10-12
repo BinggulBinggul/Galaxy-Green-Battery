@@ -1,4 +1,4 @@
-const CACHE_NAME = 'galaxy-green-battery-v35';
+const CACHE_NAME = 'galaxy-green-battery-v45';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
