@@ -357,17 +357,19 @@
   <div class="viewing-area">
     <div class="badge">🌿 Galaxy Green Battery</div>
     <h1>Galaxy Green Battery</h1>
-    <p>SysDump 로그의 BMS 원시 수치로 실배터리 수명을 분석합니다.</p>
+    <p>갤럭시 스마트폰 & 노트북의 배터리 실제 수명을 분석합니다.</p>
   </div>
 
   <div class="interaction-area">
+    <!-- 메인 배터리 카드 -->
     <div class="oneui-card">
-      <div style="font-weight: 700; font-size: 1.1rem;">배터리 상태</div>
-      <div id="summaryText" style="color: var(--oneui-text-sub); font-size: 0.88rem; margin-top: 4px;">로그 파일이 아직 선택되지 않았습니다.</div>
+      <div id="cardDeviceTag" style="font-size: 0.8rem; font-weight: 700; color: var(--oneui-green); margin-bottom: 2px;">GALAXY DEVICE</div>
+      <div style="font-weight: 700; font-size: 1.15rem;">배터리 상태</div>
+      <div id="summaryText" style="color: var(--oneui-text-sub); font-size: 0.88rem; margin-top: 4px;">로그 또는 배터리 보고서가 선택되지 않았습니다.</div>
 
       <div class="stat-grid">
         <div class="stat-item">
-          <div class="stat-label">배터리 수명 (ASOC/BSOH)</div>
+          <div class="stat-label">배터리 수명 (실제 잔여도)</div>
           <div id="healthVal" class="stat-value">--%</div>
         </div>
         <div class="stat-item">
@@ -375,51 +377,116 @@
           <div id="cycleVal" class="stat-value">--회</div>
         </div>
       </div>
-      <div id="statusDetail" class="status-msg">하단 플로팅 메뉴에서 [파일 선택]을 누르세요.</div>
+      <div id="statusDetail" class="status-msg">하단 플로팅 메뉴 또는 갤럭시 북 메뉴에서 파일을 선택하세요.</div>
 
       <button class="pill-btn primary-pill" id="btnOpenExtraInfo" style="width: 100%; justify-content: center; margin-top: 18px; padding: 13px; font-size: 0.94rem;" disabled>
-        🔍 추가정보 확인하기 (기기·저장소·배터리 상세)
+        🔍 추가정보 확인하기 (기기·용량·배터리 상세)
       </button>
     </div>
 
+    <!-- 파일 선택 팁 카드 -->
     <div class="oneui-card" style="padding: 16px 20px;">
       <div style="font-size: 0.85rem; color: var(--oneui-text-sub); line-height: 1.5;">
-        💡 <b>파일 선택 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 용량이 가장 큰 <b>메인 덤프 파일(<code>dumpState_[기종명]...log</code>)</b>을 선택해야 모든 수치가 정상 추출됩니다.
+        💡 <b>스마트폰 덤프 파일 팁</b>: <code>내장 저장공간 > log</code> 폴더에서 용량이 가장 큰 <b>메인 파일(<code>dumpState_[기종명]...log</code>)</b>을 선택해야 모든 수치가 추출됩니다.
       </div>
+    </div>
+
+    <!-- 🌟 갤럭시 북 (노트북) 전용 독립 메뉴 카드 (파일 선택 팁 바로 밑) -->
+    <div class="oneui-card" style="border: 2px dashed rgba(16, 185, 129, 0.35); padding: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 1.15rem;">💻</span>
+            <span style="font-weight: 800; font-size: 1.05rem;">갤럭시 북 배터리 진단</span>
+          </div>
+          <div style="font-size: 0.83rem; color: var(--oneui-text-sub); margin-top: 3px;">
+            Windows 정밀 배터리 보고서(HTML) 분석
+          </div>
+        </div>
+        <button class="pill-btn primary-pill" id="btnBookGuide" style="padding: 8px 14px; font-size: 0.84rem;">
+          📖 추출 & 가이드
+        </button>
+      </div>
+
+      <button class="pill-btn" id="btnBookUploadTrigger" style="width: 100%; justify-content: center; margin-top: 14px; background: var(--oneui-bg); font-weight: 700; padding: 12px;">
+        📄 battery-report.html 파일 선택
+      </button>
+      <input type="file" id="bookFileInput" accept=".html,.htm" style="display: none;" />
     </div>
   </div>
 
+  <!-- 하단 스마트폰 전용 플로팅 바 -->
   <div class="floating-bar-container">
     <div class="floating-bar">
       <button class="float-btn secondary" id="btnInstall" style="display: none;">
         📲 앱 설치
       </button>
       <button class="float-btn secondary" id="btnOpenGuide">
-        📖 가이드
+        📖 폰 가이드
       </button>
       <button class="float-btn primary" id="btnUploadTrigger">
-        📂 파일 선택
+        📂 폰 로그 선택
       </button>
     </div>
   </div>
 
   <input type="file" id="fileInput" accept=".log,.txt" style="display: none;" />
 
+  <!-- 🌟 갤럭시 북 가이드 & 1초 자동 추출 모달 -->
+  <div class="modal-overlay" id="bookGuideModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">갤럭시 북 배터리 보고서 추출</h3>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">Windows 정밀 배터리 진단 보고서를 1초 만에 추출하는 2가지 방법입니다.</p>
+
+      <!-- 방법 1: 1초 자동 추출 배치 파일 -->
+      <div class="guide-tip-box" style="border: 1.5px solid var(--oneui-green); background: var(--oneui-green-light);">
+        <b style="color: var(--oneui-green-dark); font-size: 0.95rem;">⚡ 가장 쉬운 1초 방법 (추천)</b>
+        <div style="margin-top: 6px; font-size: 0.88rem; color: var(--oneui-text-main); line-height: 1.5;">
+          아래 버튼을 눌러 실행기를 다운로드한 뒤, 실행하면 <b>바탕화면에 <code>battery-report.html</code> 파일이 1초 만에 생성</b>됩니다!
+        </div>
+        <div style="margin-top: 10px;">
+          <button class="pill-btn" id="btnDownloadBatScript" style="background: var(--oneui-card); font-weight: 700; border: 1px solid var(--oneui-green);">
+            📥 자동 추출 실행기 다운로드 (.bat)
+          </button>
+        </div>
+      </div>
+
+      <!-- 방법 2: 명령어 직접 실행 -->
+      <div class="guide-tip-box" style="margin-top: 14px;">
+        <b style="font-size: 0.92rem;">⌨️ 직접 명령어로 추출하기</b>
+        <div style="margin-top: 6px; font-size: 0.86rem; color: var(--oneui-text-sub); line-height: 1.5;">
+          1. 키보드의 <b>Windows 키 + R</b>을 눌러 [실행] 창을 엽니다.<br>
+          2. 아래 명령어를 복사하여 붙여넣고 [확인]을 누르면 바탕화면에 생성됩니다.
+        </div>
+        <div class="action-btn-row">
+          <button class="pill-btn primary-pill" id="btnCopyBookCmd">
+            📋 명령어 복사
+          </button>
+        </div>
+      </div>
+
+      <button class="float-btn primary" id="btnCloseBookGuide" style="width: 100%; justify-content: center; margin-top: 24px;">
+        확인 완료
+      </button>
+    </div>
+  </div>
+
   <!-- 추가정보 바텀시트 모달 -->
   <div class="modal-overlay" id="extraInfoModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
       <h3 style="margin: 0 0 4px 0; font-size: 1.3rem;">기기 종합 진단 리포트</h3>
-      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">SysDump 로그에서 정밀 추출한 하드웨어 상세 정보입니다.</p>
+      <p style="margin: 0 0 16px 0; color: var(--oneui-text-sub); font-size: 0.86rem;">로그에서 정밀 추출한 하드웨어 상세 정보입니다.</p>
 
       <!-- 1. 배터리 정밀 진단 -->
       <div class="report-section">
         <div class="report-title">🔋 배터리 상세 지표</div>
-        <div class="report-row">
+        <div class="report-row" id="rowBsoh">
           <span class="report-label">BSOH (실제 정밀 건강도)</span>
           <span class="report-val" id="repBsoh">--</span>
         </div>
-        <div class="report-row">
+        <div class="report-row" id="rowAsoc">
           <span class="report-label">ASOC (보정 용량 기준)</span>
           <span class="report-val" id="repAsoc">--</span>
         </div>
@@ -431,21 +498,21 @@
           </div>
         </div>
         <div class="report-row">
-          <span class="report-label">현재 최대 충전 가능 용량</span>
+          <span class="report-label">현재 최대 완충 가능 용량</span>
           <span class="report-val" id="repBatMaxCap" style="color: var(--oneui-green-dark);">--</span>
         </div>
-        <div class="report-row">
+        <div class="report-row" id="rowBatMfg">
           <span class="report-label">배터리 제조/조립일 (LLB)</span>
           <span class="report-val" id="repBatMfg">--</span>
         </div>
-        <div class="report-row">
+        <div class="report-row" id="rowBatTemp">
           <span class="report-label">역대 최고 기록 온도</span>
           <span class="report-val" id="repBatTemp">--</span>
         </div>
       </div>
 
-      <!-- 2. UFS 저장장치 수명 -->
-      <div class="report-section">
+      <!-- 2. UFS 저장장치 수명 (스마트폰 전용) -->
+      <div class="report-section" id="sectionUfs">
         <div class="report-title">💾 UFS 저장장치 플래시 수명</div>
         <div class="report-row">
           <span class="report-label">UFS Type A (SLC 영역)</span>
@@ -466,12 +533,12 @@
 
       <!-- 3. 기기 및 펌웨어 사양 -->
       <div class="report-section">
-        <div class="report-title">📱 기기 및 펌웨어 사양</div>
+        <div class="report-title">📱 기기 및 시스템 사양</div>
         <div class="report-row">
           <span class="report-label">기기 모델명</span>
           <span class="report-val" id="repModel">--</span>
         </div>
-        <div class="report-row">
+        <div class="report-row" id="rowSoc">
           <span class="report-label">프로세서 (AP/Chip)</span>
           <span class="report-val" id="repSoc" style="color: var(--oneui-green-dark);">--</span>
         </div>
@@ -479,18 +546,18 @@
           <span class="report-label">운영체제 버전</span>
           <span class="report-val" id="repOsVer">--</span>
         </div>
-        <div class="report-row">
+        <div class="report-row" id="rowBuildId">
           <span class="report-label">펌웨어 빌드 번호 (PDA)</span>
           <span class="report-val" id="repBuildId" style="color: var(--oneui-green-dark);">--</span>
         </div>
-        <div class="report-row">
+        <div class="report-row" id="rowBuildDate">
           <span class="report-label">펌웨어 빌드 일시</span>
           <span class="report-val" id="repBuildDate">--</span>
         </div>
       </div>
 
-      <!-- 4. 시스템 안정성 -->
-      <div class="report-section">
+      <!-- 4. 시스템 가동 이력 -->
+      <div class="report-section" id="sectionSystem">
         <div class="report-title">⏱️ 시스템 가동 상태</div>
         <div class="report-row">
           <span class="report-label">마지막 부팅 사유</span>
@@ -508,7 +575,7 @@
     </div>
   </div>
 
-  <!-- 가이드 모달 -->
+  <!-- 스마트폰 가이드 모달 -->
   <div class="modal-overlay" id="guideModal">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
@@ -617,12 +684,24 @@
       }
     });
 
+    // 기본 엘리먼트
     const fileInput = document.getElementById('fileInput');
     const btnUploadTrigger = document.getElementById('btnUploadTrigger');
     const btnOpenGuide = document.getElementById('btnOpenGuide');
     const btnCloseGuide = document.getElementById('btnCloseGuide');
     const guideModal = document.getElementById('guideModal');
 
+    // 갤럭시 북 전용 엘리먼트
+    const bookFileInput = document.getElementById('bookFileInput');
+    const btnBookUploadTrigger = document.getElementById('btnBookUploadTrigger');
+    const btnBookGuide = document.getElementById('btnBookGuide');
+    const btnCloseBookGuide = document.getElementById('btnCloseBookGuide');
+    const bookGuideModal = document.getElementById('bookGuideModal');
+    const btnDownloadBatScript = document.getElementById('btnDownloadBatScript');
+    const btnCopyBookCmd = document.getElementById('btnCopyBookCmd');
+
+    // 결과 및 리포트 엘리먼트
+    const cardDeviceTag = document.getElementById('cardDeviceTag');
     const btnOpenExtraInfo = document.getElementById('btnOpenExtraInfo');
     const extraInfoModal = document.getElementById('extraInfoModal');
     const btnCloseExtraInfo = document.getElementById('btnCloseExtraInfo');
@@ -643,6 +722,16 @@
     const repBatTemp = document.getElementById('repBatTemp');
     const btnEditCap = document.getElementById('btnEditCap');
 
+    const rowBsoh = document.getElementById('rowBsoh');
+    const rowAsoc = document.getElementById('rowAsoc');
+    const rowBatMfg = document.getElementById('rowBatMfg');
+    const rowBatTemp = document.getElementById('rowBatTemp');
+    const sectionUfs = document.getElementById('sectionUfs');
+    const rowSoc = document.getElementById('rowSoc');
+    const rowBuildId = document.getElementById('rowBuildId');
+    const rowBuildDate = document.getElementById('rowBuildDate');
+    const sectionSystem = document.getElementById('sectionSystem');
+
     const repUfsA = document.getElementById('repUfsA');
     const repUfsB = document.getElementById('repUfsB');
     const repPreEol = document.getElementById('repPreEol');
@@ -657,7 +746,9 @@
 
     let currentCalculatedHealthRate = 1.0;
     let currentFinalDesignCap = 0;
+    let currentCapUnit = 'mAh';
 
+    // 스마트폰 트리거 & 모달
     btnUploadTrigger.addEventListener('click', () => fileInput.click());
     btnOpenGuide.addEventListener('click', () => guideModal.style.display = 'flex');
     btnCloseGuide.addEventListener('click', () => guideModal.style.display = 'none');
@@ -665,10 +756,57 @@
       if (e.target === guideModal) guideModal.style.display = 'none';
     });
 
+    // 갤럭시 북 트리거 & 모달
+    btnBookUploadTrigger.addEventListener('click', () => bookFileInput.click());
+    btnBookGuide.addEventListener('click', () => bookGuideModal.style.display = 'flex');
+    btnCloseBookGuide.addEventListener('click', () => bookGuideModal.style.display = 'none');
+    bookGuideModal.addEventListener('click', (e) => {
+      if (e.target === bookGuideModal) bookGuideModal.style.display = 'none';
+    });
+
     btnOpenExtraInfo.addEventListener('click', () => extraInfoModal.style.display = 'flex');
     btnCloseExtraInfo.addEventListener('click', () => extraInfoModal.style.display = 'none');
     extraInfoModal.addEventListener('click', (e) => {
       if (e.target === extraInfoModal) extraInfoModal.style.display = 'none';
+    });
+
+    // 🌟 갤럭시 북 1초 자동 추출기 (.bat) 생성 및 다운로드
+    btnDownloadBatScript.addEventListener('click', () => {
+      const batScript = `@echo off
+chcp 65001 >nul
+title 갤럭시 북 배터리 보고서 생성기
+echo ========================================================
+echo   [Galaxy Green Battery] 배터리 보고서를 생성하고 있습니다...
+echo ========================================================
+echo.
+powercfg /batteryreport /output "%USERPROFILE%\\Desktop\\battery-report.html"
+echo.
+echo [성공] 바탕화면에 'battery-report.html' 파일이 생성되었습니다!
+echo 웹앱 화면으로 돌아가 [battery-report.html 파일 선택]을 누르세요.
+echo.
+pause
+`;
+      const blob = new Blob([batScript], { type: 'application/x-bat' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'GalaxyBook_Battery_Report.bat';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("📥 'GalaxyBook_Battery_Report.bat' 다운로드 완료! 실행하세요.");
+    });
+
+    // 갤럭시 북 명령어 복사
+    btnCopyBookCmd.addEventListener('click', async () => {
+      const cmd = 'powercfg /batteryreport /output "%USERPROFILE%\\Desktop\\battery-report.html"';
+      try {
+        await navigator.clipboard.writeText(cmd);
+        showToast("✅ 명령어 복사 완료! [Win + R] 창에 붙여넣으세요.");
+      } catch (err) {
+        showToast("명령어: " + cmd);
+      }
     });
 
     btnCopyKeyword.addEventListener('click', async () => {
@@ -689,21 +827,115 @@
       }
     });
 
-    // 🌟 용량 직접 수정 버튼 이벤트
     btnEditCap.addEventListener('click', () => {
-      const input = prompt("배터리 정격 용량(mAh)을 직접 입력하세요:", currentFinalDesignCap || "4800");
+      const input = prompt(`배터리 정격 용량(${currentCapUnit})을 직접 입력하세요:`, currentFinalDesignCap || "4800");
       if (input) {
         const customCap = parseInt(input.replace(/[^0-9]/g, ''), 10);
-        if (customCap && customCap >= 1000 && customCap <= 10000) {
+        if (customCap && customCap >= 1000 && customCap <= 150000) {
           currentFinalDesignCap = customCap;
-          repBatDesignCap.textContent = `${customCap.toLocaleString()} mAh (직접 지정)`;
+          repBatDesignCap.textContent = `${customCap.toLocaleString()} ${currentCapUnit} (직접 지정)`;
           const maxCap = Math.round(customCap * currentCalculatedHealthRate);
-          repBatMaxCap.textContent = `${maxCap.toLocaleString()} mAh (${(currentCalculatedHealthRate * 100).toFixed(1)}%)`;
-          showToast(`용량이 ${customCap} mAh로 재계산되었습니다.`);
+          repBatMaxCap.textContent = `${maxCap.toLocaleString()} ${currentCapUnit} (${(currentCalculatedHealthRate * 100).toFixed(1)}%)`;
+          showToast(`용량이 ${customCap} ${currentCapUnit}로 재계산되었습니다.`);
         }
       }
     });
 
+    // 🌟 갤럭시 북 Battery Report HTML 파서
+    bookFileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      summaryText.textContent = `${file.name} 분석 중...`;
+      cardDeviceTag.textContent = 'GALAXY BOOK';
+      healthVal.textContent = '...';
+      cycleVal.textContent = '...';
+      btnOpenExtraInfo.disabled = true;
+
+      try {
+        const text = await file.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+
+        const getValueByLabel = (label) => {
+          const cells = Array.from(doc.querySelectorAll('td, span, th'));
+          const target = cells.find(c => c.textContent.trim().toUpperCase() === label.toUpperCase());
+          if (target) {
+            let next = target.nextElementSibling;
+            if (!next && target.parentElement) {
+              const children = Array.from(target.parentElement.children);
+              const idx = children.indexOf(target);
+              if (idx !== -1 && children[idx + 1]) next = children[idx + 1];
+            }
+            if (next) return next.textContent.trim();
+          }
+          return null;
+        };
+
+        const rawDesign = getValueByLabel('DESIGN CAPACITY');
+        const rawFull = getValueByLabel('FULL CHARGE CAPACITY');
+        const rawCycle = getValueByLabel('CYCLE COUNT');
+        const systemName = getValueByLabel('SYSTEM PRODUCT NAME') || getValueByLabel('PRODUCT NAME') || 'Galaxy Book';
+        const osVer = getValueByLabel('OS BUILD') || getValueByLabel('OS VERSION') || 'Windows 11';
+        const reportTime = getValueByLabel('REPORT TIME') || '';
+
+        const cleanNum = (str) => str ? parseInt(str.replace(/[^0-9]/g, ''), 10) : null;
+        const designCap = cleanNum(rawDesign);
+        const fullCap = cleanNum(rawFull);
+        const cycle = cleanNum(rawCycle);
+
+        if (!designCap || !fullCap) {
+          throw new Error("배터리 용량 지표를 찾을 수 없습니다. 올바른 battery-report.html 파일인지 확인하세요.");
+        }
+
+        const healthRate = (fullCap / designCap);
+        const healthPercent = (healthRate * 100).toFixed(1);
+
+        currentCapUnit = 'mWh';
+        currentCalculatedHealthRate = healthRate;
+        currentFinalDesignCap = designCap;
+
+        healthVal.textContent = `${Math.round(healthPercent)}%`;
+        cycleVal.textContent = cycle ? `${cycle}회` : '미기록';
+        summaryText.textContent = `${systemName} 분석 완료`;
+
+        if (healthRate >= 0.85) {
+          statusDetail.textContent = '✨ 갤럭시 북 배터리 수명이 매우 건강합니다.';
+        } else if (healthRate >= 0.80) {
+          statusDetail.textContent = '⚡ 갤럭시 북 배터리 수명이 정상 작동 범위입니다.';
+        } else {
+          statusDetail.textContent = '⚠️ 배터리 교체를 권장합니다 (80% 미만).';
+        }
+
+        // 노트북 UI 전용 모달 바인딩 (모바일 전용 행 숨김)
+        rowBsoh.style.display = 'none';
+        rowAsoc.style.display = 'none';
+        rowBatMfg.style.display = 'none';
+        rowBatTemp.style.display = 'none';
+        sectionUfs.style.display = 'none';
+        rowSoc.style.display = 'none';
+        rowBuildId.style.display = 'none';
+        rowBuildDate.style.display = 'none';
+        sectionSystem.style.display = 'none';
+
+        repBatDesignCap.textContent = `${designCap.toLocaleString()} mWh`;
+        repBatMaxCap.textContent = `${fullCap.toLocaleString()} mWh (${healthPercent}%)`;
+        btnEditCap.style.display = 'inline-block';
+
+        repModel.textContent = systemName;
+        repOsVer.textContent = `${osVer} ${reportTime ? '(' + reportTime.split(' ')[0] + ')' : ''}`;
+
+        btnOpenExtraInfo.disabled = false;
+        showToast("🎉 갤럭시 북 배터리 분석 완료!");
+
+      } catch (err) {
+        console.error(err);
+        summaryText.textContent = '오류 발생';
+        statusDetail.textContent = '파일을 읽는 중 문제가 발생했습니다: ' + err.message;
+      }
+    });
+
+    // 🌟 스마트폰 SysDump 파서 로직
     const SOC_MAP = {
       'SM8750': '스냅드래곤 8 Elite (SM8750)',
       'SUN': '스냅드래곤 8 Elite',
@@ -754,7 +986,6 @@
       return raw;
     }
 
-    // 🌟 갤럭시 기종별 공식 정격 배터리 용량 DB (폴드8 = 4,800 mAh 완벽 반영)
     const MODEL_DB = {
       'SM-F971': { name: '갤럭시 Z 폴드8', cap: 4800 },
       'SM-F968': { name: '갤럭시 Z 폴드 SE', cap: 4400 },
@@ -790,11 +1021,7 @@
       'SM-G998': { name: '갤럭시 S21 울트라', cap: 5000 },
       'SM-G996': { name: '갤럭시 S21+', cap: 4800 },
       'SM-G991': { name: '갤럭시 S21', cap: 4000 },
-      'SM-G988': { name: '갤럭시 S20 울트라', cap: 5000 },
-      'SM-G986': { name: '갤럭시 S20+', cap: 4500 },
-      'SM-G981': { name: '갤럭시 S20', cap: 4000 },
-      'SM-N986': { name: '갤럭시 노트20 울트라', cap: 4500 },
-      'SM-N981': { name: '갤럭시 노트20', cap: 4300 }
+      'SM-N986': { name: '갤럭시 노트20 울트라', cap: 4500 }
     };
 
     function formatModelName(raw) {
@@ -882,12 +1109,12 @@
       return result || '정보 없음';
     }
 
-    // 🌟 대용량 덤프 정밀 스트리밍 파서
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       summaryText.textContent = `${file.name} 분석 중...`;
+      cardDeviceTag.textContent = 'GALAXY PHONE';
       statusDetail.textContent = '메인 BMS 데이터 및 하드웨어 스펙을 정밀 탐색하고 있습니다...';
       healthVal.textContent = '...';
       cycleVal.textContent = '...';
@@ -913,8 +1140,6 @@
         const regexCycleFunc = /Cycle\((\d+)/i;
         const regexLlbCal = /(?:LLB CAL|LLB MAN|Battery first use date)\s*[:=]\s*\[?(\d{8})\]?/i;
         const regexTemp = /(?:mSavedBatteryMaxTemp)\s*[:=,]\s*\[?(\d+)\]?/i;
-
-        // 🌟 ZRAM/메모리와 혼동되지 않는 '오직 배터리' 전용 엄격한 정규표현식
         const regexStrictBatteryCap = /(?:Estimated battery capacity|Last learned battery capacity):\s*(\d+)\s*mAh|(?:charge_full_design|batt_capacity_max)\s*[:=]\s*\[?(\d+)\]?/i;
 
         const regexUfsA = /(?:Device life time estimation type A|bDeviceLifeTimeEstA|life_time_estimation_a|life_time_a|Storage Life Time A)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
@@ -922,14 +1147,12 @@
         const regexPreEol = /(?:Pre-EOL info|bPreEOLInfo|eol_info|Pre EOL)\s*[:=,\]\s]*\s*(?:0x)?([0-9a-fA-F]+)/i;
 
         const regexModel = /\[ro\.product\.model\]:\s*\[(.*?)\]/i;
-
         const regexSocModel = /\[ro\.soc\.model\]:\s*\[(.*?)\]/i;
         const regexSocChip = /\[(?:ro\.chipname\vert{}ro\.hardware\.chipname)\]:\s*\[(.*?)\]/i;
         const regexSocPlatform = /\[(?:ro\.board\.platform\vert{}ro\.product\.board)\]:\s*\[(.*?)\]/i;
 
         const regexAndroid = /\[ro\.build\.version\.release\]:\s*\[(.*?)\]/i;
         const regexOneui = /\[?(?:ro\.build\.version\.oneui(?:\.version)?\vert{}ro\.build\.version\.sep\vert{}ro\.build\.version\.sem)\]?[\s:=]+\[?([A-Za-z0-9_.-]+)\]?/i;
-        
         const regexBuildCandidates = /\[?(?:ro\.build\.PDA\vert{}ro\.boot\.bootloader\vert{}ro\.bootloader\vert{}ro\.build\.version\.incremental\vert{}ro\.system\.build\.version\.incremental\vert{}ro\.build\.display\.id\vert{}ro\.build\.hidden_ver\vert{}ro\.build\.fingerprint)\]?[\s:=]+\[?([A-Za-z0-9_./:-]+)\]?/i;
         const regexBuildDate = /\[ro\.build\.date\]:\s*\[(.*?)\]/i;
 
@@ -956,7 +1179,6 @@
               }
             }
 
-            // 진짜 배터리 용량만 캡처
             if (!logBatteryCap && regexStrictBatteryCap.test(line)) {
               const m = line.match(regexStrictBatteryCap);
               let val = parseInt(m[1] || m[2], 10);
@@ -1018,7 +1240,7 @@
 
         if (finalDisplayHealth) {
           healthVal.textContent = `${finalDisplayHealth}%`;
-          summaryText.textContent = '종합 분석 완료';
+          summaryText.textContent = '스마트폰 분석 완료';
 
           const hNum = parseInt(finalDisplayHealth, 10);
           if (hNum >= 85) {
@@ -1035,26 +1257,28 @@
 
         cycleVal.textContent = cycle ? `${cycle}회` : '미발견';
 
-        // 🌟 배터리 정격 용량 결정 (DB 우선 검증: 6144 같은 비정상 수치 원천 차단)
+        currentCapUnit = 'mAh';
         const dbCap = getDesignCapacityFromModel(model);
-        let finalDesignCap = dbCap;
-        if (!finalDesignCap && logBatteryCap) {
-          finalDesignCap = logBatteryCap;
-        }
+        let finalDesignCap = dbCap || logBatteryCap || 4800;
 
         currentCalculatedHealthRate = (parseFloat(bsoh) || parseFloat(asoc) || 100) / 100;
-        currentFinalDesignCap = finalDesignCap || 4800;
+        currentFinalDesignCap = finalDesignCap;
 
-        if (finalDesignCap) {
-          repBatDesignCap.textContent = `${finalDesignCap.toLocaleString()} mAh`;
-          const maxCap = Math.round(finalDesignCap * currentCalculatedHealthRate);
-          repBatMaxCap.textContent = `${maxCap.toLocaleString()} mAh (${(currentCalculatedHealthRate * 100).toFixed(1)}%)`;
-        } else {
-          repBatDesignCap.textContent = '4,800 mAh (기본값)';
-          const maxCap = Math.round(4800 * currentCalculatedHealthRate);
-          repBatMaxCap.textContent = `${maxCap.toLocaleString()} mAh (${(currentCalculatedHealthRate * 100).toFixed(1)}%)`;
-        }
+        repBatDesignCap.textContent = `${finalDesignCap.toLocaleString()} mAh`;
+        const maxCap = Math.round(finalDesignCap * currentCalculatedHealthRate);
+        repBatMaxCap.textContent = `${maxCap.toLocaleString()} mAh (${(currentCalculatedHealthRate * 100).toFixed(1)}%)`;
         btnEditCap.style.display = 'inline-block';
+
+        // 스마트폰 모달 행 복구
+        rowBsoh.style.display = 'flex';
+        rowAsoc.style.display = 'flex';
+        rowBatMfg.style.display = 'flex';
+        rowBatTemp.style.display = 'flex';
+        sectionUfs.style.display = 'block';
+        rowSoc.style.display = 'flex';
+        rowBuildId.style.display = 'flex';
+        rowBuildDate.style.display = 'flex';
+        sectionSystem.style.display = 'block';
 
         repBsoh.textContent = bsoh ? `${parseFloat(bsoh).toFixed(1)}%` : '미기록';
         repAsoc.textContent = asoc ? `${asoc}%` : '미기록';
@@ -1090,7 +1314,6 @@
         repModel.textContent = formatModelName(model);
         repSoc.textContent = formatSocName(finalSoc);
         repOsVer.textContent = formatOneUi(oneuiVer, androidVer);
-        
         repBuildId.textContent = buildId || '미기록';
         repBuildDate.textContent = formatBuildDate(buildDate);
 
@@ -1098,7 +1321,7 @@
         repUptime.textContent = uptime || '기록 없음';
 
         btnOpenExtraInfo.disabled = false;
-        showToast("🎉 분석 완료! [추가정보 확인하기]를 확인해 보세요.");
+        showToast("🎉 스마트폰 분석 완료! [추가정보 확인하기]를 확인해 보세요.");
 
       } catch (err) {
         console.error(err);
